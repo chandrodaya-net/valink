@@ -1,0 +1,12 @@
+
+- name: node0
+  type: local
+  address: juno1hf6q0rraf4sk285f3gvv8308rmzzjq5xt286h8
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AxvuxxCckC6kq+PChs+GuWIQgx/BjYpiqSzqY48c4o2I"}'
+  mnemonic: ""
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+index section silly core potato zero opinion nominee system bargain expand hockey glass around innocent west forum demise sword twice obscure nut tree empty

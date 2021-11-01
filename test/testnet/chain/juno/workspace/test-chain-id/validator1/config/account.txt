@@ -1,0 +1,12 @@
+
+- name: validator1
+  type: local
+  address: juno1mwq02d28ldk67mtrmxqgjtt2mclnw5lzd2puaw
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"Ag4Zeod+Ofhb19+ov9kn+m42SqDjWqc7VzPYaaSnZEYy"}'
+  mnemonic: ""
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+report illegal risk victory split clump nominee comfort vacuum clutch school mesh acoustic industry fuel absurd pelican note casino denial olympic inform voice caught

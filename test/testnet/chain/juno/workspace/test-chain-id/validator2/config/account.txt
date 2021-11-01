@@ -1,0 +1,12 @@
+
+- name: validator2
+  type: local
+  address: juno14tfksszfamlm48ue6tw6de0xpj982vrdhxc96t
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A2E+SkUMxqLD1cEl6iqJY7b9s/LTNSeyPmFwObziHr2c"}'
+  mnemonic: ""
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+main acquire put shoe plunge action yellow smile vital flat page echo such pass segment around clump width pepper motion exhibit stomach alarm liar

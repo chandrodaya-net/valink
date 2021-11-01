@@ -1,0 +1,12 @@
+
+- name: node1
+  type: local
+  address: juno1dkxj8frn0u790kk3jeeruq2qnjvn606snlrn30
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A2eq4v3XlFXqUEtIXS3wmX6wta4cjQMYWptYeWrux+zK"}'
+  mnemonic: ""
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+face lunar enemy category east attitude roast evil chest hover kind music front eager narrow hour cousin swamp common foot worth parade spread energy

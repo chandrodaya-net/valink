@@ -1,0 +1,12 @@
+
+- name: validator0
+  type: local
+  address: juno17pcldsyaep04vcwlfhlgljlejrstumqs0q8x0x
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A80ytfmpwXWoQ2Bg0QDsgdlGfn3ai6IC0CtUQlLGjJVm"}'
+  mnemonic: ""
+
+
+**Important** write this mnemonic phrase in a safe place.
+It is the only way to recover your account if you ever forget your password.
+
+video old spice window solar lunar brain deal level coconut oxygen leaf breeze bundle battle wheel mention tumble reward loan increase congress cabin gaze
