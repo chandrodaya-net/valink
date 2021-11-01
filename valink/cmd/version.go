@@ -10,7 +10,7 @@ import (
 
 var (
 	// application's version string
-	Version = "v2.0.0"
+	Version = "v1.1.0"
 	// commit
 	Commit = ""
 	// sdk version
@@ -28,7 +28,7 @@ type Info struct {
 	Version           string `json:"version" yaml:"version"`
 	GitCommit         string `json:"commit" yaml:"commit"`
 	GoVersion         string `json:"go_version" yaml:"go_version"`
-  CosmosSdkVersion  string `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
+	CosmosSdkVersion  string `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
 	TendermintVersion string `json:"tendermint_version" yaml:"tendermint_version"`
 }
 
@@ -48,7 +48,7 @@ var versionCmd = &cobra.Command{
 	Short: "version information for valink",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-    // version.TMCoreSemVer
+		// version.TMCoreSemVer
 		bz, err := json.MarshalIndent(NewInfo(), "", "  ")
 		if err != nil {
 			return err
