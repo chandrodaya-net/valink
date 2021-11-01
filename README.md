@@ -140,3 +140,7 @@ software or this license, under any kind of legal claim.
 - [Provably Secure Distributed Schnorr Signatures
   and a (t, n) Threshold Scheme for Implicit
   Certificates](http://cacr.uwaterloo.ca/techreports/2001/corr2001-13.ps)
+
+## Acknowledgement
+
+This codebase (and most especially the underlying cryptographic libraries) was developed by Roman Shtylman (@defunctzombie). Thanks a lot for laying the foundation of this application!

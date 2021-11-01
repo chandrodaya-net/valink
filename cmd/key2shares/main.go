@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"tendermint-signer/internal/signer"
+	"tendermint-signer/signer"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmjson "github.com/tendermint/tendermint/libs/json"
