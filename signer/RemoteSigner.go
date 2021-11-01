@@ -122,6 +122,7 @@ func (rs *ReconnRemoteSigner) loop() {
 			conn.Close()
 			conn = nil
 		}
+
 	}
 }
 
@@ -169,7 +170,7 @@ func (rs *ReconnRemoteSigner) handleRequest(req tmProtoPrivval.Message) (tmProto
 				},
 			}}
 		} else {
-			rs.Logger.Info("Signed vote", "node", rs.address, "height", vote.Height, "round", vote.Round, "type", vote.Type)
+			rs.Logger.Info("Signed vote", "node", rs.address, "height", vote.Height, "round", vote.Round, "step", VoteToStep(vote), "type", vote.Type)
 			msg.Sum = &tmProtoPrivval.Message_SignedVoteResponse{SignedVoteResponse: &tmProtoPrivval.SignedVoteResponse{Vote: *vote, Error: nil}}
 		}
 	case *tmProtoPrivval.Message_SignProposalRequest:
@@ -185,7 +186,7 @@ func (rs *ReconnRemoteSigner) handleRequest(req tmProtoPrivval.Message) (tmProto
 				},
 			}}
 		} else {
-			rs.Logger.Info("Signed proposal", "node", rs.address, "height", proposal.Height, "round", proposal.Round, "type", proposal.Type)
+			rs.Logger.Info("Signed proposal", "node", rs.address, "height", proposal.Height, "round", proposal.Round, "step", ProposalToStep(proposal), "type", proposal.Type)
 			msg.Sum = &tmProtoPrivval.Message_SignedProposalResponse{SignedProposalResponse: &tmProtoPrivval.SignedProposalResponse{
 				Proposal: *proposal,
 				Error:    nil,

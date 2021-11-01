@@ -48,7 +48,7 @@ func TestCosignerRpcServerSign(test *testing.T) {
 
 	config := CosignerRpcServerConfig{
 		Logger:        logger,
-		ListenAddress: "tcp://0.0.0.0:0",
+		ListenAddress: "0.0.0.0:0",
 		Cosigner:      dummyCosigner,
 	}
 
@@ -63,15 +63,17 @@ func TestCosignerRpcServerSign(test *testing.T) {
 	vote.Type = tmProto.PrevoteType
 	signBytes := tm.VoteSignBytes("chain-id", &vote)
 
-	remoteCosigner := NewRemoteCosigner(2, rpcServer.listener.Addr().Network()+"://"+rpcServer.Addr().String())
+	remoteCosigner := NewRemoteCosigner(2, rpcServer.Addr().String())
 	resp, err := remoteCosigner.Sign(&CosignerSignRequest{
 		SignBytes: signBytes,
 	})
 	require.NoError(test, err)
-	require.Equal(test, resp, CosignerSignResponse{
-		Signature: []byte("foobar"),
-	})
 
+	expctedRes := CosignerSignResponse{
+		Signature: []byte("foobar"),
+	}
+
+	require.Equal(test, resp.Signature, expctedRes.Signature)
 	rpcServer.Stop()
 }
 
@@ -82,23 +84,31 @@ func TestCosignerRpcServerGetEphemeralSecretPart(test *testing.T) {
 
 	config := CosignerRpcServerConfig{
 		Logger:        logger,
-		ListenAddress: "tcp://0.0.0.0:0",
+		ListenAddress: "0.0.0.0:0",
 		Cosigner:      dummyCosigner,
 	}
 
 	rpcServer := NewCosignerRpcServer(&config)
 	rpcServer.Start()
 
-	remoteCosigner := NewRemoteCosigner(2, rpcServer.listener.Addr().Network()+"://"+rpcServer.Addr().String())
+	//tempAddress := rpcServer.listener.Addr().Network() + "://" +
+	tempAddress := rpcServer.Addr().String()
+	remoteCosigner := NewRemoteCosigner(2, tempAddress)
 
 	resp, err := remoteCosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{})
 	require.NoError(test, err)
-	require.Equal(test, resp, CosignerGetEphemeralSecretPartResponse{
+
+	expctedRes := CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,
 		SourceEphemeralSecretPublicKey: []byte("foo"),
 		EncryptedSharePart:             []byte("bar"),
 		SourceSig:                      []byte("source sig"),
-	})
+	}
+
+	require.Equal(test, expctedRes.SourceID, resp.SourceID)
+	require.Equal(test, expctedRes.SourceEphemeralSecretPublicKey, resp.SourceEphemeralSecretPublicKey)
+	require.Equal(test, expctedRes.EncryptedSharePart, resp.EncryptedSharePart)
+	require.Equal(test, expctedRes.SourceSig, resp.SourceSig)
 
 	rpcServer.Stop()
 }

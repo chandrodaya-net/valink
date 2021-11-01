@@ -1,23 +1,25 @@
 package signer
 
 import (
+	"context"
 	"fmt"
 	"net"
-	"net/http"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	server "github.com/tendermint/tendermint/rpc/jsonrpc/server"
-	rpc_types "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	grpc "google.golang.org/grpc"
 )
 
-func rpcSignRequest(ctx *rpc_types.Context, req CosignerSignRequest) (*CosignerSignResponse, error) {
+type CosignerSeverMock struct {
+	listenAddress string
+	listener      net.Listener
+}
+
+func (csm *CosignerSeverMock) Sign(ctx context.Context, req *CosignerSignRequest) (*CosignerSignResponse, error) {
 	return &CosignerSignResponse{Signature: []byte("hello world")}, nil
 }
 
-func rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
+func (csm *CosignerSeverMock) GetEphemeralSecretPart(ctx context.Context, req *CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
 	response := &CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,
 		SourceEphemeralSecretPublicKey: []byte("foo"),
@@ -31,24 +33,23 @@ func TestRemoteCosignerSign(test *testing.T) {
 	require.NoError(test, err)
 	defer lis.Close()
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	serv := func() {
-		routes := map[string]*server.RPCFunc{
-			"Sign":                   server.NewRPCFunc(rpcSignRequest, "arg"),
-			"GetEphemeralSecretPart": server.NewRPCFunc(rpcGetEphemeralSecretPart, "arg"),
+	rpcServer := &CosignerSeverMock{}
+	rpcServer.listener = lis
+
+	grpcServer := grpc.NewServer()
+
+	RegisterCosignerServiceServer(grpcServer, rpcServer)
+
+	go func() {
+		defer lis.Close()
+		//server.Serve(lis, tcpLogger, config)
+		if err := grpcServer.Serve(lis); err != nil {
+			//rpcServer.logger.Error("failed to serve", "error", err)
 		}
-
-		mux := http.NewServeMux()
-		server.RegisterRPCFuncs(mux, routes, logger)
-
-		tcpLogger := logger.With("socket", "tcp")
-		config := server.DefaultConfig()
-		server.Serve(lis, mux, tcpLogger, config)
-	}
-	go serv()
+	}()
 
 	port := lis.Addr().(*net.TCPAddr).Port
-	cosigner := NewRemoteCosigner(2, fmt.Sprintf("tcp://0.0.0.0:%d", port))
+	cosigner := NewRemoteCosigner(2, fmt.Sprintf("0.0.0.0:%d", port))
 
 	resp, err := cosigner.Sign(&CosignerSignRequest{})
 	require.NoError(test, err)
@@ -60,30 +61,35 @@ func TestRemoteCosignerGetEphemeralSecretPart(test *testing.T) {
 	require.NoError(test, err)
 	defer lis.Close()
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	serv := func() {
-		routes := map[string]*server.RPCFunc{
-			"Sign":                   server.NewRPCFunc(rpcSignRequest, "arg"),
-			"GetEphemeralSecretPart": server.NewRPCFunc(rpcGetEphemeralSecretPart, "arg"),
+	rpcServer := &CosignerSeverMock{}
+	rpcServer.listener = lis
+
+	grpcServer := grpc.NewServer()
+
+	RegisterCosignerServiceServer(grpcServer, rpcServer)
+
+	go func() {
+		defer lis.Close()
+		//server.Serve(lis, tcpLogger, config)
+		if err := grpcServer.Serve(lis); err != nil {
+			//rpcServer.logger.Error("failed to serve", "error", err)
 		}
-
-		mux := http.NewServeMux()
-		server.RegisterRPCFuncs(mux, routes, logger)
-
-		tcpLogger := logger.With("socket", "tcp")
-		config := server.DefaultConfig()
-		server.Serve(lis, mux, tcpLogger, config)
-	}
-	go serv()
+	}()
 
 	port := lis.Addr().(*net.TCPAddr).Port
-	cosigner := NewRemoteCosigner(2, fmt.Sprintf("tcp://0.0.0.0:%d", port))
+	cosigner := NewRemoteCosigner(2, fmt.Sprintf("0.0.0.0:%d", port))
 
 	resp, err := cosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{})
 	require.NoError(test, err)
-	require.Equal(test, resp, CosignerGetEphemeralSecretPartResponse{
+
+	expectedRes := CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,
 		SourceEphemeralSecretPublicKey: []byte("foo"),
 		EncryptedSharePart:             []byte("bar"),
-	})
+	}
+
+	require.Equal(test, expectedRes.SourceID, resp.SourceID)
+	require.Equal(test, expectedRes.SourceEphemeralSecretPublicKey, resp.SourceEphemeralSecretPublicKey)
+	require.Equal(test, expectedRes.EncryptedSharePart, resp.EncryptedSharePart)
+
 }

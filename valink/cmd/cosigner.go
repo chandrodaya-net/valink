@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"runtime/pprof"
 	"sync"
 	"time"
 
@@ -38,6 +39,17 @@ func StartCosignerCmd() *cobra.Command {
 			config, err := signer.LoadConfigFromFile(args[0])
 			if err != nil {
 				log.Fatal(err)
+			}
+
+			profile, _ := cmd.Flags().GetBool("profile")
+			if profile == true {
+				cpuprofile := fmt.Sprintf("%s/cosigner.prof", config.PrivValStateDir)
+				f, err := os.Create(cpuprofile)
+				if err != nil {
+					log.Fatal(err)
+				}
+				pprof.StartCPUProfile(f)
+				defer pprof.StopCPUProfile()
 			}
 
 			logger := tmlog.NewTMLogger(
@@ -176,6 +188,10 @@ func StartCosignerCmd() *cobra.Command {
 						panic(err)
 					}
 				}
+				if profile == true {
+					pprof.StopCPUProfile()
+				}
+
 				wg.Done()
 			})
 			wg.Wait()
@@ -183,6 +199,8 @@ func StartCosignerCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().Bool("profile", false, "--profile=false or true")
 
 	return cmd
 }

@@ -147,7 +147,6 @@ func (cosigner *LocalCosigner) GetID() int {
 // Return the signed bytes or an error
 // Implements Cosigner interface
 func (cosigner *LocalCosigner) Sign(req *CosignerSignRequest) (*CosignerSignResponse, error) {
-	logger.Info("Sign")
 	cosigner.lastSignStateMutex.Lock()
 	defer cosigner.lastSignStateMutex.Unlock()
 
@@ -243,8 +242,6 @@ func (cosigner *LocalCosigner) Sign(req *CosignerSignRequest) (*CosignerSignResp
 // Get the ephemeral secret part for an ephemeral share
 // The ephemeral secret part is encrypted for the receiver
 func (cosigner *LocalCosigner) GetEphemeralSecretPart(req *CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
-
-	logger.Info("GetEphemeralSecretPart", "Requested by cosigner: ", req.ID, "Height:  ", req.Height, "round:", req.Round, "Step: ", req.Step)
 	res := &CosignerGetEphemeralSecretPartResponse{}
 
 	// protects the meta map
@@ -343,8 +340,6 @@ func (cosigner *LocalCosigner) HasEphemeralSecretPart(req CosignerHasEphemeralSe
 			res.EphemeralSecretPublicKey = pub
 		}
 	}
-
-	logger.Info("HasEphemeralSecretPart: ", "Exist=", res.Exists)
 	return res, nil
 }
 
@@ -416,6 +411,5 @@ func (cosigner *LocalCosigner) SetEphemeralSecretPart(req CosignerSetEphemeralSe
 	meta.Peers[req.SourceID-1].Share = sharePart
 	meta.Peers[req.SourceID-1].EphemeralSecretPublicKey = req.SourceEphemeralSecretPublicKey
 
-	logger.Info("SetEphemeralSecretPart", "from", req.SourceID)
 	return nil
 }

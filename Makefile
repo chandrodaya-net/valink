@@ -3,6 +3,8 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 TMVERSION := $(shell go list -m -u -f '{{.Version}}' github.com/tendermint/tendermint)
 COMMIT  := $(shell git log -1 --format='%H')
 
+TESTPACKAGES := $(shell go list ./... | grep -v testnet) 
+
 all: install
 
 LD_FLAGS = -X github.com/dauTT/tendermint-mpc-validator/cmd.Version=$(VERSION) \
@@ -22,13 +24,13 @@ build-linux:
 	GOOS=linux GOARCH=amd64 go build --mod readonly $(BUILD_FLAGS) -o ./build/valink ./valink
 
 test:
-	go test -mod readonly  ./...
+	go test -mod=readonly $(TESTPACKAGES) -count=1
 
 race:
-	go test -race -short ./...
+	go test -race -short -mod=readonly $(TESTPACKAGES) -count=1
 
-msan:
-	go test -msan -short ./...
+#msan:
+#	go test -msan -short -mod=readonly $(TESTPACKAGES) -count=1
 
 tools:
 	go install golang.org/x/lint/golint

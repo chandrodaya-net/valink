@@ -62,7 +62,7 @@ type SignState struct {
 
 // Save persists the FilePvLastSignState to its filePath.
 func (signState *SignState) Save() {
-	logger.Info("Save signState", "filepath=", signState.filePath)
+	//logger.Info("Save signState", "filepath=", signState.filePath)
 	outFile := signState.filePath
 	if outFile == "" {
 		panic("cannot save SignState: filePath not set")
@@ -107,6 +107,7 @@ func (signState *SignState) CheckHRS(height int64, round int64, step int8) (bool
 			}
 		}
 	}
+
 	return false, nil
 }
 
