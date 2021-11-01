@@ -1,9 +1,8 @@
 package signer
 
-import "time"
-
 // CosignerSignRequest is sent to a co-signer to obtain their signature for the SignBytes
 // The SignBytes should be a serialized block
+/*
 type CosignerSignRequest struct {
 	SignBytes []byte
 }
@@ -20,6 +19,7 @@ type CosignerGetEphemeralSecretPartRequest struct {
 	Round  int64
 	Step   int8
 }
+*/
 
 type CosignerHasEphemeralSecretPartRequest struct {
 	ID     int
@@ -33,12 +33,14 @@ type CosignerHasEphemeralSecretPartResponse struct {
 	EphemeralSecretPublicKey []byte
 }
 
+/*
 type CosignerGetEphemeralSecretPartResponse struct {
 	SourceID                       int
 	SourceEphemeralSecretPublicKey []byte
 	EncryptedSharePart             []byte
 	SourceSig                      []byte
 }
+*/
 
 type CosignerSetEphemeralSecretPartRequest struct {
 	SourceID                       int

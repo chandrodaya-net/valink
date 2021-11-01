@@ -35,10 +35,10 @@ func (cosigner *RemoteCosigner) GetID() int {
 // Sign the sign request using the cosigner's share
 // Return the signed bytes or an error
 func (cosigner *RemoteCosigner) Sign(signReq CosignerSignRequest) (CosignerSignResponse, error) {
-	logger.Info("START: Sign", "from RemoteCosigner=",  cosigner.GetID())
-	
+	logger.Info("START: Sign", "from RemoteCosigner=", cosigner.GetID())
+
 	params := map[string]interface{}{
-		"arg": RpcSignRequest{
+		"arg": CosignerSignRequest{
 			SignBytes: signReq.SignBytes,
 		},
 	}
@@ -53,7 +53,7 @@ func (cosigner *RemoteCosigner) Sign(signReq CosignerSignRequest) (CosignerSignR
 		return CosignerSignResponse{}, err
 	}
 
-	logger.Info("END: Sign", "from RemoteCosigner=",  cosigner.GetID())
+	logger.Info("END: Sign", "from RemoteCosigner=", cosigner.GetID())
 	return CosignerSignResponse{
 		Timestamp: result.Timestamp,
 		Signature: result.Signature,
@@ -61,11 +61,11 @@ func (cosigner *RemoteCosigner) Sign(signReq CosignerSignRequest) (CosignerSignR
 }
 
 func (cosigner *RemoteCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSecretPartRequest) (CosignerGetEphemeralSecretPartResponse, error) {
-	logger.Info("START: GetEphemeralSecretPart", "from RemoteCosigner=",  cosigner.GetID())
+	logger.Info("START: GetEphemeralSecretPart", "from RemoteCosigner=", cosigner.GetID())
 	resp := CosignerGetEphemeralSecretPartResponse{}
 
 	params := map[string]interface{}{
-		"arg": RpcGetEphemeralSecretPartRequest{
+		"arg": CosignerGetEphemeralSecretPartRequest{
 			ID:     req.ID,
 			Height: req.Height,
 			Round:  req.Round,
@@ -77,7 +77,7 @@ func (cosigner *RemoteCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralS
 	if err != nil {
 		return CosignerGetEphemeralSecretPartResponse{}, err
 	}
-	result := &RpcGetEphemeralSecretPartResponse{}
+	result := &CosignerGetEphemeralSecretPartResponse{}
 	_, err = remoteClient.Call(ctx, "GetEphemeralSecretPart", params, result)
 	if err != nil {
 		return CosignerGetEphemeralSecretPartResponse{}, err
@@ -88,7 +88,7 @@ func (cosigner *RemoteCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralS
 	resp.EncryptedSharePart = result.EncryptedSharePart
 	resp.SourceSig = result.SourceSig
 
-	logger.Info("END: GetEphemeralSecretPart", "from RemoteCosigner=",  cosigner.GetID(), "Response.SourceID=",  result.SourceID)
+	logger.Info("END: GetEphemeralSecretPart", "from RemoteCosigner=", cosigner.GetID(), "Response.SourceID=", result.SourceID)
 	return resp, nil
 }
 

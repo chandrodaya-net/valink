@@ -141,10 +141,10 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 
 	// have our cosigner generate ephemeral info at the current height
 	_, err = pv.cosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
-		ID:     ourID,
+		ID:     int32(ourID),
 		Height: height,
 		Round:  round,
-		Step:   step,
+		Step:   int32(step),
 	})
 	if err != nil {
 		return nil, stamp, err
@@ -189,10 +189,10 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 				if !hasResp.Exists {
 					// if we don't already have an ephemeral secret part for the HRS, we need to get one
 					ephSecretResp, err := peer.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
-						ID:     ourID,
+						ID:     int32(ourID),
 						Height: height,
 						Round:  round,
-						Step:   step,
+						Step:   int32(step),
 					})
 
 					if err != nil {
@@ -214,7 +214,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 					// set the response for ourselves
 					err = pv.cosigner.SetEphemeralSecretPart(CosignerSetEphemeralSecretPartRequest{
 						SourceSig:                      ephSecretResp.SourceSig,
-						SourceID:                       ephSecretResp.SourceID,
+						SourceID:                       int(ephSecretResp.SourceID),
 						SourceEphemeralSecretPublicKey: ephSecretResp.SourceEphemeralSecretPublicKey,
 						EncryptedSharePart:             ephSecretResp.EncryptedSharePart,
 						Height:                         height,

@@ -14,28 +14,28 @@ import (
 	rpc_types "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
-type RpcSignRequest struct {
-	SignBytes []byte
-}
+// type RpcSignRequest struct {
+// 	SignBytes []byte
+// }
 
-type RpcSignResponse struct {
-	Timestamp time.Time
-	Signature []byte
-}
+// type RpcSignResponse struct {
+// 	Timestamp time.Time
+// 	Signature []byte
+// }
 
-type RpcGetEphemeralSecretPartRequest struct {
-	ID     int
-	Height int64
-	Round  int64
-	Step   int8
-}
+// type RpcGetEphemeralSecretPartRequest struct {
+// 	ID     int
+// 	Height int64
+// 	Round  int64
+// 	Step   int8
+// }
 
-type RpcGetEphemeralSecretPartResponse struct {
-	SourceID                       int
-	SourceEphemeralSecretPublicKey []byte
-	EncryptedSharePart             []byte
-	SourceSig                      []byte
-}
+// type RpcGetEphemeralSecretPartResponse struct {
+// 	SourceID                       int
+// 	SourceEphemeralSecretPublicKey []byte
+// 	EncryptedSharePart             []byte
+// 	SourceSig                      []byte
+// }
 
 type CosignerRpcServerConfig struct {
 	Logger        log.Logger
@@ -78,6 +78,15 @@ func (rpcServer *CosignerRpcServer) OnStart() error {
 	}
 	rpcServer.listener = lis
 
+	/*
+		grpcServer := grpc.NewServer()
+
+		if err := grpcServer.Serve(rpcServer.listener); err != nil {
+			rpcServer.logger.Error("failed to serve", "error", err)
+		}
+
+	*/
+
 	routes := map[string]*server.RPCFunc{
 		"Sign":                   server.NewRPCFunc(rpcServer.rpcSignRequest, "arg"),
 		"GetEphemeralSecretPart": server.NewRPCFunc(rpcServer.rpcGetEphemeralSecretPart, "arg"),
@@ -105,10 +114,10 @@ func (rpcServer *CosignerRpcServer) Addr() net.Addr {
 	return rpcServer.listener.Addr()
 }
 
-func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req RpcSignRequest) (*RpcSignResponse, error) {
-	rpcServer.logger.Info("rpcSignRequest",  "from=", ctx.RemoteAddr())
+func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req CosignerSignRequest) (*CosignerSignResponse, error) {
+	rpcServer.logger.Info("rpcSignRequest", "from=", ctx.RemoteAddr())
 
-	response := &RpcSignResponse{}
+	response := &CosignerSignResponse{}
 
 	height, round, step, err := UnpackHRS(req.SignBytes)
 	if err != nil {
@@ -130,10 +139,10 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req R
 
 			go func() {
 				partRequest := CosignerGetEphemeralSecretPartRequest{
-					ID:     rpcServer.cosigner.GetID(),
+					ID:     int32(rpcServer.cosigner.GetID()),
 					Height: height,
 					Round:  round,
-					Step:   step,
+					Step:   int32(step),
 				}
 
 				// if we already have an ephemeral secret part for this HRS, we don't need to re-query for it
@@ -171,7 +180,7 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req R
 
 				// set the share part from the response
 				err = rpcServer.cosigner.SetEphemeralSecretPart(CosignerSetEphemeralSecretPartRequest{
-					SourceID:                       partResponse.SourceID,
+					SourceID:                       int(partResponse.SourceID),
 					SourceEphemeralSecretPublicKey: partResponse.SourceEphemeralSecretPublicKey,
 					EncryptedSharePart:             partResponse.EncryptedSharePart,
 					Height:                         height,
@@ -210,8 +219,8 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req R
 	return response, nil
 }
 
-func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req RpcGetEphemeralSecretPartRequest) (*RpcGetEphemeralSecretPartResponse, error) {	
-	response := &RpcGetEphemeralSecretPartResponse{}
+func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
+	response := &CosignerGetEphemeralSecretPartResponse{}
 
 	partResp, err := rpcServer.cosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
 		ID:     req.ID,
@@ -220,7 +229,7 @@ func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Con
 		Step:   req.Step,
 	})
 	if err != nil {
-		rpcServer.logger.Info("NO RESPONSE from : ",  ctx.RemoteAddr())
+		rpcServer.logger.Info("NO RESPONSE from : ", ctx.RemoteAddr())
 		return response, nil
 	}
 

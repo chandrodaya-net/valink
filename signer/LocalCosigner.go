@@ -19,11 +19,10 @@ import (
 )
 
 var (
-logger = tmlog.NewTMLogger(
-	tmlog.NewSyncWriter(os.Stdout),
-).With("module", "signer")
+	logger = tmlog.NewTMLogger(
+		tmlog.NewSyncWriter(os.Stdout),
+	).With("module", "signer")
 )
-
 
 type HRSKey struct {
 	Height int64
@@ -244,8 +243,8 @@ func (cosigner *LocalCosigner) Sign(req CosignerSignRequest) (CosignerSignRespon
 // Get the ephemeral secret part for an ephemeral share
 // The ephemeral secret part is encrypted for the receiver
 func (cosigner *LocalCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSecretPartRequest) (CosignerGetEphemeralSecretPartResponse, error) {
-	
-	logger.Info("GetEphemeralSecretPart",  "Requested by cosigner: ", req.ID, "Height:  ",req.Height, "round:",  req.Round,  "Step: ", req.Step )
+
+	logger.Info("GetEphemeralSecretPart", "Requested by cosigner: ", req.ID, "Height:  ", req.Height, "round:", req.Round, "Step: ", req.Step)
 	res := CosignerGetEphemeralSecretPartResponse{}
 
 	// protects the meta map
@@ -255,7 +254,7 @@ func (cosigner *LocalCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSe
 	hrsKey := HRSKey{
 		Height: req.Height,
 		Round:  req.Round,
-		Step:   req.Step,
+		Step:   int8(req.Step),
 	}
 
 	meta, ok := cosigner.hrsMeta[hrsKey]
@@ -283,7 +282,7 @@ func (cosigner *LocalCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSe
 	meta.Peers[cosigner.key.ID-1].EphemeralSecretPublicKey = ourEphPublicKey
 
 	// grab the peer info for the ID being requested
-	peer, ok := cosigner.peers[req.ID]
+	peer, ok := cosigner.peers[int(req.ID)]
 	if !ok {
 		return res, errors.New("Unknown peer ID")
 	}
@@ -296,7 +295,7 @@ func (cosigner *LocalCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSe
 		return res, err
 	}
 
-	res.SourceID = cosigner.key.ID
+	res.SourceID = int32(cosigner.key.ID)
 	res.SourceEphemeralSecretPublicKey = ourEphPublicKey
 	res.EncryptedSharePart = encrypted
 
@@ -345,7 +344,7 @@ func (cosigner *LocalCosigner) HasEphemeralSecretPart(req CosignerHasEphemeralSe
 		}
 	}
 
-	logger.Info("HasEphemeralSecretPart: ",  "Exist=", res.Exists)
+	logger.Info("HasEphemeralSecretPart: ", "Exist=", res.Exists)
 	return res, nil
 }
 
@@ -358,7 +357,7 @@ func (cosigner *LocalCosigner) SetEphemeralSecretPart(req CosignerSetEphemeralSe
 		}
 
 		digestMsg := CosignerGetEphemeralSecretPartResponse{}
-		digestMsg.SourceID = req.SourceID
+		digestMsg.SourceID = int32(req.SourceID)
 		digestMsg.SourceEphemeralSecretPublicKey = req.SourceEphemeralSecretPublicKey
 		digestMsg.EncryptedSharePart = req.EncryptedSharePart
 

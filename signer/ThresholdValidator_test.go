@@ -122,13 +122,13 @@ func TestThresholdValidator2of2(test *testing.T) {
 			ID:     2,
 			Height: proposal.Height,
 			Round:  int64(proposal.Round),
-			Step:   ProposalToStep(&proposal),
+			Step:   int32(ProposalToStep(&proposal)),
 		})
 		require.NoError(test, err)
 
 		cosigner2.SetEphemeralSecretPart(CosignerSetEphemeralSecretPartRequest{
 			SourceSig:                      cosigner1EphSecretPart.SourceSig,
-			SourceID:                       cosigner1EphSecretPart.SourceID,
+			SourceID:                       int(cosigner1EphSecretPart.SourceID),
 			SourceEphemeralSecretPublicKey: cosigner1EphSecretPart.SourceEphemeralSecretPublicKey,
 			EncryptedSharePart:             cosigner1EphSecretPart.EncryptedSharePart,
 			Height:                         proposal.Height,

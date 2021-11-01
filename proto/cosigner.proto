@@ -1,0 +1,39 @@
+
+syntax = "proto3";
+// package signer;
+
+option go_package = "/signer";
+
+// cd 
+
+// /home/dau/workspace/dauTT/tendermint-mpc-validator/signer/Cosigner.go
+
+message CosignerSignRequest {
+	bytes sign_bytes = 1; 
+}
+
+message CosignerSignResponse {
+  bytes ephemeral_public = 1; 
+  int64 timestamp = 2; 
+  bytes signature = 3 ; 
+}
+
+message CosignerGetEphemeralSecretPartRequest {
+    int32 iD = 1;     // --> int?
+	int64 height = 2; 
+	int64 round = 3; 
+	int32 step = 4;  // --> int8
+}
+
+
+message CosignerGetEphemeralSecretPartResponse {
+	int32 source_iD = 1;  // --> int?
+	bytes source_ephemeral_secret_publicKey = 2; 
+	bytes encrypted_share_part = 3; 
+	bytes source_sig = 4; 
+}
+
+service CosignerService {
+  rpc Sign(CosignerSignRequest) returns (CosignerSignResponse);
+  rpc GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest) returns (CosignerSignResponse);
+}

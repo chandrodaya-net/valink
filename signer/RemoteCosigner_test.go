@@ -13,12 +13,12 @@ import (
 	rpc_types "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
-func rpcSignRequest(ctx *rpc_types.Context, req RpcSignRequest) (*RpcSignResponse, error) {
-	return &RpcSignResponse{Signature: []byte("hello world")}, nil
+func rpcSignRequest(ctx *rpc_types.Context, req CosignerSignRequest) (*CosignerSignResponse, error) {
+	return &CosignerSignResponse{Signature: []byte("hello world")}, nil
 }
 
-func rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req RpcGetEphemeralSecretPartRequest) (*RpcGetEphemeralSecretPartResponse, error) {
-	response := &RpcGetEphemeralSecretPartResponse{
+func rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
+	response := &CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,
 		SourceEphemeralSecretPublicKey: []byte("foo"),
 		EncryptedSharePart:             []byte("bar"),
