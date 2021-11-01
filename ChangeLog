@@ -1,0 +1,3 @@
+v1.0.0:
+    - Add testing framework
+    - Test the framework with nrValidator=3 nrNode=2 mode=mpc nrSigner=3 totalShares=4 theshold=2
