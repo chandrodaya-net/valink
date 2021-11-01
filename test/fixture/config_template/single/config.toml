@@ -1,0 +1,20 @@
+mode = "single"
+
+# Each validator instance has its own private share.
+# Avoid putting more than one share per instance.
+key_file = "/home/dau/workspace/dauTT/archive/mpc/keys/priv_validator_key.json"
+
+# The state directory stores watermarks for double signing protection.
+# Each validator instance maintains a watermark.
+state_dir = "/home/dau/workspace/dauTT/archive/mpc/singlex"
+
+# The network chain id for your p2p nodes
+chain_id = "test-chain-id"
+
+# Configure any number of p2p network nodes.
+# We recommend at least 2 nodes per cosigner for redundancy.
+[[node]]
+address = "tcp://192.168.10.0:1235"
+
+[[node]]
+address = "tcp://192.168.10.1:1235"
