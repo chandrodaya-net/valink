@@ -1,10 +1,10 @@
 
 syntax = "proto3";
-// package signer;
+//package proto;
 
 option go_package = "/signer";
 
-// cd 
+// protoc --go_out=plugins=grpc:../  *.proto
 
 // /home/dau/workspace/dauTT/tendermint-mpc-validator/signer/Cosigner.go
 
@@ -35,5 +35,5 @@ message CosignerGetEphemeralSecretPartResponse {
 
 service CosignerService {
   rpc Sign(CosignerSignRequest) returns (CosignerSignResponse);
-  rpc GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest) returns (CosignerSignResponse);
+  rpc GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest) returns (CosignerGetEphemeralSecretPartResponse);
 }

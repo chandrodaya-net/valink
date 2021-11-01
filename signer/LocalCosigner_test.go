@@ -129,7 +129,7 @@ func TestLocalCosignerSign2of2(test *testing.T) {
 
 	// get part 2 from cosigner 1 and give to cosigner 2
 	{
-		resp, err := cosigner1.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
+		resp, err := cosigner1.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 			ID:     2,
 			Height: 1,
 			Round:  0,
@@ -153,7 +153,7 @@ func TestLocalCosignerSign2of2(test *testing.T) {
 
 	// get part 1 from cosigner 2 and give to cosigner 1
 	{
-		resp, err := cosigner2.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
+		resp, err := cosigner2.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 			ID:     1,
 			Height: 1,
 			Round:  0,
@@ -189,12 +189,12 @@ func TestLocalCosignerSign2of2(test *testing.T) {
 	signBytes := tm.VoteSignBytes("chain-id", &vote)
 
 	// sign with cosigner 1
-	sigRes1, err := cosigner1.Sign(CosignerSignRequest{
+	sigRes1, err := cosigner1.Sign(&CosignerSignRequest{
 		SignBytes: signBytes,
 	})
 	require.NoError(test, err)
 
-	sigRes2, err := cosigner2.Sign(CosignerSignRequest{
+	sigRes2, err := cosigner2.Sign(&CosignerSignRequest{
 		SignBytes: signBytes,
 	})
 	require.NoError(test, err)

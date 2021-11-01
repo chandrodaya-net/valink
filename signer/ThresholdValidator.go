@@ -140,7 +140,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 	ourID := pv.cosigner.GetID()
 
 	// have our cosigner generate ephemeral info at the current height
-	_, err = pv.cosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
+	_, err = pv.cosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 		ID:     int32(ourID),
 		Height: height,
 		Round:  round,
@@ -188,7 +188,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 
 				if !hasResp.Exists {
 					// if we don't already have an ephemeral secret part for the HRS, we need to get one
-					ephSecretResp, err := peer.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
+					ephSecretResp, err := peer.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 						ID:     int32(ourID),
 						Height: height,
 						Round:  round,
@@ -241,7 +241,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 
 				logger.Info("ask the cosigner to sign with their share", "cosigner ID", peer.GetID())
 				// ask the cosigner to sign with their share
-				sigResp, err := peer.Sign(CosignerSignRequest{
+				sigResp, err := peer.Sign(&CosignerSignRequest{
 					SignBytes: signBytes,
 				})
 
@@ -296,7 +296,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 	defer shareSignaturesMutex.Unlock()
 
 	// sign with our share now
-	signResp, err := pv.cosigner.Sign(CosignerSignRequest{
+	signResp, err := pv.cosigner.Sign(&CosignerSignRequest{
 		SignBytes: signBytes,
 	})
 	if err != nil {

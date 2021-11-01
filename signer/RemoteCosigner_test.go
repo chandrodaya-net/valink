@@ -50,7 +50,7 @@ func TestRemoteCosignerSign(test *testing.T) {
 	port := lis.Addr().(*net.TCPAddr).Port
 	cosigner := NewRemoteCosigner(2, fmt.Sprintf("tcp://0.0.0.0:%d", port))
 
-	resp, err := cosigner.Sign(CosignerSignRequest{})
+	resp, err := cosigner.Sign(&CosignerSignRequest{})
 	require.NoError(test, err)
 	require.Equal(test, resp.Signature, []byte("hello world"))
 }
@@ -79,7 +79,7 @@ func TestRemoteCosignerGetEphemeralSecretPart(test *testing.T) {
 	port := lis.Addr().(*net.TCPAddr).Port
 	cosigner := NewRemoteCosigner(2, fmt.Sprintf("tcp://0.0.0.0:%d", port))
 
-	resp, err := cosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{})
+	resp, err := cosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{})
 	require.NoError(test, err)
 	require.Equal(test, resp, CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,

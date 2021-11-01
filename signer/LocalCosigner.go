@@ -146,12 +146,12 @@ func (cosigner *LocalCosigner) GetID() int {
 // Sign the sign request using the cosigner's share
 // Return the signed bytes or an error
 // Implements Cosigner interface
-func (cosigner *LocalCosigner) Sign(req CosignerSignRequest) (CosignerSignResponse, error) {
+func (cosigner *LocalCosigner) Sign(req *CosignerSignRequest) (*CosignerSignResponse, error) {
 	logger.Info("Sign")
 	cosigner.lastSignStateMutex.Lock()
 	defer cosigner.lastSignStateMutex.Unlock()
 
-	res := CosignerSignResponse{}
+	res := &CosignerSignResponse{}
 	lss := cosigner.lastSignState
 
 	height, round, step, err := UnpackHRS(req.SignBytes)
@@ -242,10 +242,10 @@ func (cosigner *LocalCosigner) Sign(req CosignerSignRequest) (CosignerSignRespon
 
 // Get the ephemeral secret part for an ephemeral share
 // The ephemeral secret part is encrypted for the receiver
-func (cosigner *LocalCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSecretPartRequest) (CosignerGetEphemeralSecretPartResponse, error) {
+func (cosigner *LocalCosigner) GetEphemeralSecretPart(req *CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
 
 	logger.Info("GetEphemeralSecretPart", "Requested by cosigner: ", req.ID, "Height:  ", req.Height, "round:", req.Round, "Step: ", req.Step)
-	res := CosignerGetEphemeralSecretPartResponse{}
+	res := &CosignerGetEphemeralSecretPartResponse{}
 
 	// protects the meta map
 	cosigner.lastSignStateMutex.Lock()
@@ -356,7 +356,7 @@ func (cosigner *LocalCosigner) SetEphemeralSecretPart(req CosignerSetEphemeralSe
 			return errors.New("SourceSig field is required")
 		}
 
-		digestMsg := CosignerGetEphemeralSecretPartResponse{}
+		digestMsg := &CosignerGetEphemeralSecretPartResponse{}
 		digestMsg.SourceID = int32(req.SourceID)
 		digestMsg.SourceEphemeralSecretPublicKey = req.SourceEphemeralSecretPublicKey
 		digestMsg.EncryptedSharePart = req.EncryptedSharePart

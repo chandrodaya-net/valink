@@ -16,14 +16,14 @@ func (cosigner *DummyCosigner) GetID() int {
 	return 0
 }
 
-func (cosigner *DummyCosigner) Sign(signReq CosignerSignRequest) (CosignerSignResponse, error) {
-	return CosignerSignResponse{
+func (cosigner *DummyCosigner) Sign(signReq *CosignerSignRequest) (*CosignerSignResponse, error) {
+	return &CosignerSignResponse{
 		Signature: []byte("foobar"),
 	}, nil
 }
 
-func (cosigner *DummyCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSecretPartRequest) (CosignerGetEphemeralSecretPartResponse, error) {
-	return CosignerGetEphemeralSecretPartResponse{
+func (cosigner *DummyCosigner) GetEphemeralSecretPart(req *CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
+	return &CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,
 		SourceEphemeralSecretPublicKey: []byte("foo"),
 		EncryptedSharePart:             []byte("bar"),
@@ -64,7 +64,7 @@ func TestCosignerRpcServerSign(test *testing.T) {
 	signBytes := tm.VoteSignBytes("chain-id", &vote)
 
 	remoteCosigner := NewRemoteCosigner(2, rpcServer.listener.Addr().Network()+"://"+rpcServer.Addr().String())
-	resp, err := remoteCosigner.Sign(CosignerSignRequest{
+	resp, err := remoteCosigner.Sign(&CosignerSignRequest{
 		SignBytes: signBytes,
 	})
 	require.NoError(test, err)
@@ -91,7 +91,7 @@ func TestCosignerRpcServerGetEphemeralSecretPart(test *testing.T) {
 
 	remoteCosigner := NewRemoteCosigner(2, rpcServer.listener.Addr().Network()+"://"+rpcServer.Addr().String())
 
-	resp, err := remoteCosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{})
+	resp, err := remoteCosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{})
 	require.NoError(test, err)
 	require.Equal(test, resp, CosignerGetEphemeralSecretPartResponse{
 		SourceID:                       1,
@@ -102,3 +102,32 @@ func TestCosignerRpcServerGetEphemeralSecretPart(test *testing.T) {
 
 	rpcServer.Stop()
 }
+
+/*
+func TestGRPCServer(test *testing.T) {
+
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial("127.0.0.1:1234", grpc.WithInsecure())
+	if err != nil {
+		fmt.Printf("could not connect: %s", err)
+	}
+	defer conn.Close()
+
+	c := NewCosignerServiceClient(conn)
+
+	message := CosignerGetEphemeralSecretPartRequest{
+		ID:     2,
+		Height: 22,
+		Round:  0,
+		Step:   0,
+	}
+
+	response, err := c.GetEphemeralSecretPart(context.Background(), &message)
+	if err != nil {
+		fmt.Printf("Error when calling SayHello: %s", err)
+	}
+
+	fmt.Printf("Response from Server: %s", response.SourceEphemeralSecretPublicKey)
+
+}
+*/

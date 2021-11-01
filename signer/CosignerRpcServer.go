@@ -3,39 +3,14 @@ package signer
 import (
 	"context"
 	"net"
-	"net/http"
 	"sync"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 	tmnet "github.com/tendermint/tendermint/libs/net"
 	"github.com/tendermint/tendermint/libs/service"
-	server "github.com/tendermint/tendermint/rpc/jsonrpc/server"
-	rpc_types "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	grpc "google.golang.org/grpc"
 )
-
-// type RpcSignRequest struct {
-// 	SignBytes []byte
-// }
-
-// type RpcSignResponse struct {
-// 	Timestamp time.Time
-// 	Signature []byte
-// }
-
-// type RpcGetEphemeralSecretPartRequest struct {
-// 	ID     int
-// 	Height int64
-// 	Round  int64
-// 	Step   int8
-// }
-
-// type RpcGetEphemeralSecretPartResponse struct {
-// 	SourceID                       int
-// 	SourceEphemeralSecretPublicKey []byte
-// 	EncryptedSharePart             []byte
-// 	SourceSig                      []byte
-// }
 
 type CosignerRpcServerConfig struct {
 	Logger        log.Logger
@@ -78,30 +53,20 @@ func (rpcServer *CosignerRpcServer) OnStart() error {
 	}
 	rpcServer.listener = lis
 
-	/*
-		grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
-		if err := grpcServer.Serve(rpcServer.listener); err != nil {
-			rpcServer.logger.Error("failed to serve", "error", err)
-		}
+	RegisterCosignerServiceServer(grpcServer, rpcServer)
 
-	*/
-
-	routes := map[string]*server.RPCFunc{
-		"Sign":                   server.NewRPCFunc(rpcServer.rpcSignRequest, "arg"),
-		"GetEphemeralSecretPart": server.NewRPCFunc(rpcServer.rpcGetEphemeralSecretPart, "arg"),
-	}
-
-	mux := http.NewServeMux()
-	server.RegisterRPCFuncs(mux, routes, log.NewFilter(rpcServer.Logger, log.AllowError()))
-
-	tcpLogger := rpcServer.Logger.With("socket", "tcp")
-	tcpLogger = log.NewFilter(tcpLogger, log.AllowError())
-	config := server.DefaultConfig()
+	// tcpLogger := rpcServer.Logger.With("socket", "tcp")
+	// tcpLogger = log.NewFilter(tcpLogger, log.AllowError())
+	// config := server.DefaultConfig()
 
 	go func() {
 		defer lis.Close()
-		server.Serve(lis, mux, tcpLogger, config)
+		//server.Serve(lis, tcpLogger, config)
+		if err := grpcServer.Serve(lis); err != nil {
+			rpcServer.logger.Error("failed to serve", "error", err)
+		}
 	}()
 
 	return nil
@@ -114,8 +79,8 @@ func (rpcServer *CosignerRpcServer) Addr() net.Addr {
 	return rpcServer.listener.Addr()
 }
 
-func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req CosignerSignRequest) (*CosignerSignResponse, error) {
-	rpcServer.logger.Info("rpcSignRequest", "from=", ctx.RemoteAddr())
+func (rpcServer *CosignerRpcServer) Sign(ctx context.Context, req *CosignerSignRequest) (*CosignerSignResponse, error) {
+	//rpcServer.logger.Info("rpcSignRequest", "from=")
 
 	response := &CosignerSignResponse{}
 
@@ -163,7 +128,7 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req C
 					return
 				}
 
-				partResponse, err := peer.GetEphemeralSecretPart(partRequest)
+				partResponse, err := peer.GetEphemeralSecretPart(&partRequest)
 				if err != nil {
 					rpcServer.logger.Error("GetEphemeralSecretPart req error", "error", err)
 					return
@@ -207,7 +172,7 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req C
 	wg.Wait()
 
 	// after getting any share parts we could, we sign
-	resp, err := rpcServer.cosigner.Sign(CosignerSignRequest{
+	resp, err := rpcServer.cosigner.Sign(&CosignerSignRequest{
 		SignBytes: req.SignBytes,
 	})
 	if err != nil {
@@ -219,17 +184,17 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req C
 	return response, nil
 }
 
-func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
+func (rpcServer *CosignerRpcServer) GetEphemeralSecretPart(ctx context.Context, req *CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
 	response := &CosignerGetEphemeralSecretPartResponse{}
 
-	partResp, err := rpcServer.cosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
+	partResp, err := rpcServer.cosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 		ID:     req.ID,
 		Height: req.Height,
 		Round:  req.Round,
 		Step:   req.Step,
 	})
 	if err != nil {
-		rpcServer.logger.Info("NO RESPONSE from : ", ctx.RemoteAddr())
+		//rpcServer.logger.Info("NO RESPONSE from : ", ctx.RemoteAddr())
 		return response, nil
 	}
 

@@ -118,7 +118,7 @@ func TestThresholdValidator2of2(test *testing.T) {
 	//
 	// An enhancement could be to have Local cosigner logic directly interface their peers.
 	{
-		cosigner1EphSecretPart, err := cosigner1.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
+		cosigner1EphSecretPart, err := cosigner1.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 			ID:     2,
 			Height: proposal.Height,
 			Round:  int64(proposal.Round),

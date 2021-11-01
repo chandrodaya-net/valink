@@ -2,7 +2,7 @@
 
 BINARY="junod"
 BINARY_IMAGE="cosmoscontracts/juno:latest"
-MPC_IMAGE="dautt/valink:v2.0.1"
+MPC_IMAGE="dautt/valink:vgRPC2.0.1"
 CHAINID="test-chain-id"	
 # directories config
 FIXTUREDIR="../fixture/chain/${BINARY::-1}"
@@ -366,7 +366,8 @@ generate_mpc_config_file(){
 
     echo "# IP address and port for receiving communication from other validator instances."
     echo "# The validator instances must communicate during the signing process."
-    echo -e "cosigner_listen_address = \"tcp://0.0.0.0:1234\"\n"
+    #echo -e "cosigner_listen_address = \"tcp://0.0.0.0:1234\"\n"
+    echo -e "cosigner_listen_address = \"0.0.0.0:1234\"\n"
 
     echo "# Each validator peer appears in a \`cosigner\` section."
     echo "# This sample file is for validator ID 1, so we configure sections for peers 2 and 3."
@@ -380,7 +381,8 @@ generate_mpc_config_file(){
             echo "# The ID of this peer, these must match the key IDs."
             echo "id = $k"
             echo "# The IP address and port for communication with this peer"
-            echo -e "remote_address = \"tcp://${ipAddress}:1234\"\n"
+            # echo -e "remote_address = \"tcp://${ipAddress}:1234\"\n"
+            echo -e "remote_address = \"${ipAddress}:1234\"\n"
         fi 
 
         let k=k+1
