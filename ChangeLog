@@ -7,4 +7,8 @@ v1.1.0:
 
 v1.2.0:
     - Add integration tests in chan_test.go
+
+v1.3.0:
+    - Replace cosigner RPC server with gRPC server
+    - Fix tests
     
