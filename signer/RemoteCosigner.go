@@ -27,18 +27,6 @@ func NewRemoteCosigner(id int, address string) *RemoteCosigner {
 	return cosigner
 }
 
-// func (cosigner *RemoteCosigner) getClient() CosignerServiceClient {
-// 	var conn *grpc.ClientConn
-// 	conn, err := grpc.Dial(cosigner.address, grpc.WithInsecure())
-// 	if err != nil {
-// 		fmt.Printf("could not connect: %s", err)
-// 		return nil
-// 	}
-// 	client := NewCosignerServiceClient(conn)
-
-// 	return client, conn
-// }
-
 // GetID returns the ID of the remote cosigner
 // Implements the cosigner interface
 func (cosigner *RemoteCosigner) GetID() int {

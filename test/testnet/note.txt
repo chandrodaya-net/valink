@@ -1,0 +1,43 @@
+Valink is working quite well with following configuration in the 
+Makefile:
+
+-----------------------------------------------------------
+################### SINGLE: 2 signers OK ##########################
+VALIDATORS=4
+NODES=1
+MODE=single # mpc/single
+SIGNERS=2
+# Variables with prefix MPC are relevant only when MODE=mpc
+MPC_TOTALSHARES=4
+MPC_THRESHOLD=2
+
+-----------------------------------------------------------
+################### SINGLE: 3 signers OK ##########################
+VALIDATORS=4
+NODES=2
+MODE=single # mpc/single
+SIGNERS=3
+# Variables with prefix MPC are relevant only when MODE=mpc
+MPC_TOTALSHARES=4
+MPC_THRESHOLD=2
+
+------------------------------------------------------------
+################### MPC: 2 signers OK ##############################
+
+VALIDATORS=4
+NODES=1
+MODE=mpc # mpc/single
+SIGNERS=2
+# Variables with prefix MPC are relevant only when MODE=mpc
+MPC_TOTALSHARES=4
+MPC_THRESHOLD=2
+
+------------------------------------------------------------
+################### MPC: 3 signersOK ##############################
+VALIDATORS=4
+NODES=2
+MODE=mpc # mpc/single
+SIGNERS=3
+# Variables with prefix MPC are relevant only when MODE=mpc
+MPC_TOTALSHARES=4
+MPC_THRESHOLD=2
