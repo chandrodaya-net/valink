@@ -11,4 +11,9 @@ v1.2.0:
 v1.3.0:
     - Replace cosigner RPC server with gRPC server
     - Fix tests
-    
+
+v1.3.1:
+    - Add single mode option tests
+    - Code tested for different scenario:
+        i) single mode: 2/3 signers
+        ii) mpc mode: 2/3 signers
