@@ -8,13 +8,22 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 
 	tmCryptoEd25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	tmJson "github.com/tendermint/tendermint/libs/json"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	"gitlab.com/polychainlabs/edwards25519"
 	tsed25519 "gitlab.com/polychainlabs/threshold-ed25519/pkg"
 )
+
+var (
+logger = tmlog.NewTMLogger(
+	tmlog.NewSyncWriter(os.Stdout),
+).With("module", "signer")
+)
+
 
 type HRSKey struct {
 	Height int64
@@ -139,6 +148,7 @@ func (cosigner *LocalCosigner) GetID() int {
 // Return the signed bytes or an error
 // Implements Cosigner interface
 func (cosigner *LocalCosigner) Sign(req CosignerSignRequest) (CosignerSignResponse, error) {
+	logger.Info("Sign")
 	cosigner.lastSignStateMutex.Lock()
 	defer cosigner.lastSignStateMutex.Unlock()
 
@@ -234,6 +244,8 @@ func (cosigner *LocalCosigner) Sign(req CosignerSignRequest) (CosignerSignRespon
 // Get the ephemeral secret part for an ephemeral share
 // The ephemeral secret part is encrypted for the receiver
 func (cosigner *LocalCosigner) GetEphemeralSecretPart(req CosignerGetEphemeralSecretPartRequest) (CosignerGetEphemeralSecretPartResponse, error) {
+	
+	logger.Info("GetEphemeralSecretPart",  "Requested by cosigner: ", req.ID, "Height:  ",req.Height, "round:",  req.Round,  "Step: ", req.Step )
 	res := CosignerGetEphemeralSecretPartResponse{}
 
 	// protects the meta map
@@ -333,12 +345,12 @@ func (cosigner *LocalCosigner) HasEphemeralSecretPart(req CosignerHasEphemeralSe
 		}
 	}
 
+	logger.Info("HasEphemeralSecretPart: ",  "Exist=", res.Exists)
 	return res, nil
 }
 
 // Store an ephemeral secret share part provided by another cosigner
 func (cosigner *LocalCosigner) SetEphemeralSecretPart(req CosignerSetEphemeralSecretPartRequest) error {
-
 	// Verify the source signature
 	{
 		if req.SourceSig == nil {
@@ -404,5 +416,7 @@ func (cosigner *LocalCosigner) SetEphemeralSecretPart(req CosignerSetEphemeralSe
 	// set slot
 	meta.Peers[req.SourceID-1].Share = sharePart
 	meta.Peers[req.SourceID-1].EphemeralSecretPublicKey = req.SourceEphemeralSecretPublicKey
+
+	logger.Info("SetEphemeralSecretPart", "from", req.SourceID)
 	return nil
 }

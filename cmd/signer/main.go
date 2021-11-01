@@ -32,6 +32,7 @@ func main() {
 		tmlog.NewSyncWriter(os.Stdout),
 	).With("module", "validator")
 
+	
 	var configFile = flag.String("config", "", "path to configuration file")
 	flag.Parse()
 

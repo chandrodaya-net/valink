@@ -62,6 +62,7 @@ type SignState struct {
 
 // Save persists the FilePvLastSignState to its filePath.
 func (signState *SignState) Save() {
+	logger.Info("Save signState", "filepath=", signState.filePath)
 	outFile := signState.filePath
 	if outFile == "" {
 		panic("cannot save SignState: filePath not set")
@@ -111,6 +112,8 @@ func (signState *SignState) CheckHRS(height int64, round int64, step int8) (bool
 
 // LoadSignState loads a sign state from disk.
 func LoadSignState(filepath string) (SignState, error) {
+	logger.Info("LoadSignState", "filepath=", filepath)
+
 	state := SignState{}
 	stateJSONBytes, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -129,6 +132,7 @@ func LoadSignState(filepath string) (SignState, error) {
 // If the sign state could not be loaded, an empty sign state is initialized
 // and saved to filepath.
 func LoadOrCreateSignState(filepath string) (SignState, error) {
+	logger.Info("LoadOrCreateSignState", "filepath=", filepath)
 	existing, err := LoadSignState(filepath)
 	if err == nil {
 		return existing, nil

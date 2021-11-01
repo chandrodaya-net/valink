@@ -106,6 +106,8 @@ func (rpcServer *CosignerRpcServer) Addr() net.Addr {
 }
 
 func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req RpcSignRequest) (*RpcSignResponse, error) {
+	rpcServer.logger.Info("rpcSignRequest",  "from=", ctx.RemoteAddr())
+
 	response := &RpcSignResponse{}
 
 	height, round, step, err := UnpackHRS(req.SignBytes)
@@ -208,7 +210,7 @@ func (rpcServer *CosignerRpcServer) rpcSignRequest(ctx *rpc_types.Context, req R
 	return response, nil
 }
 
-func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req RpcGetEphemeralSecretPartRequest) (*RpcGetEphemeralSecretPartResponse, error) {
+func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Context, req RpcGetEphemeralSecretPartRequest) (*RpcGetEphemeralSecretPartResponse, error) {	
 	response := &RpcGetEphemeralSecretPartResponse{}
 
 	partResp, err := rpcServer.cosigner.GetEphemeralSecretPart(CosignerGetEphemeralSecretPartRequest{
@@ -218,6 +220,7 @@ func (rpcServer *CosignerRpcServer) rpcGetEphemeralSecretPart(ctx *rpc_types.Con
 		Step:   req.Step,
 	})
 	if err != nil {
+		rpcServer.logger.Info("NO RESPONSE from : ",  ctx.RemoteAddr())
 		return response, nil
 	}
 

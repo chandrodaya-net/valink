@@ -58,6 +58,7 @@ func (pv *ThresholdValidator) GetPubKey() (crypto.PubKey, error) {
 // SignVote signs a canonical representation of the vote, along with the
 // chainID. Implements PrivValidator.
 func (pv *ThresholdValidator) SignVote(chainID string, vote *tmProto.Vote) error {
+	logger.Info("ThresholdValidator SignVote")
 	block := &block{
 		Height:    vote.Height,
 		Round:     int64(vote.Round),
@@ -76,6 +77,7 @@ func (pv *ThresholdValidator) SignVote(chainID string, vote *tmProto.Vote) error
 // SignProposal signs a canonical representation of the proposal, along with
 // the chainID. Implements PrivValidator.
 func (pv *ThresholdValidator) SignProposal(chainID string, proposal *tmProto.Proposal) error {
+	logger.Info("ThresholdValidator SignProposal")
 	block := &block{
 		Height:    proposal.Height,
 		Round:     int64(proposal.Round),
@@ -102,6 +104,7 @@ type block struct {
 func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, time.Time, error) {
 	height, round, step, stamp := block.Height, block.Round, block.Step, block.Timestamp
 
+	logger.Info("START ThresholdValidator signBlock",  "height", height, "round", round, "step", step)
 	// the block sign state for caching full block signatures
 	lss := pv.lastSignState
 
@@ -236,6 +239,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 					}
 				}
 
+				logger.Info("ask the cosigner to sign with their share",  "cosigner ID", peer.GetID())
 				// ask the cosigner to sign with their share
 				sigResp, err := peer.Sign(CosignerSignRequest{
 					SignBytes: signBytes,
@@ -322,6 +326,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 		return nil, stamp, errors.New("Not enough co-signers")
 	}
 
+	logger.Info("assemble into final signature")
 	// assemble into final signature
 	combinedSig := tsed25519.CombineShares(total, sigIds, shareSigs)
 
@@ -339,5 +344,6 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 	pv.lastSignState.SignBytes = signBytes
 	pv.lastSignState.Save()
 
+	logger.Info("END ThresholdValidator signBlock")
 	return signature, stamp, nil
 }
