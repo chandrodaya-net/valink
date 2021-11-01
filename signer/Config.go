@@ -17,6 +17,7 @@ type CosignerConfig struct {
 
 type Config struct {
 	Mode              string           `toml:"mode"`
+	Moniker           string           `toml:"moniker"`
 	PrivValKeyFile    string           `toml:"key_file"`
 	PrivValStateDir   string           `toml:"state_dir"`
 	ChainID           string           `toml:"chain_id"`

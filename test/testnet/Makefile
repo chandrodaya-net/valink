@@ -1,5 +1,14 @@
 #!/usr/bin/make -f
 
+VALIDATORS=4
+NODES=3
+MODE=mpc
+SIGNERS=3
+TOTALSHARES=4
+THRESHOLD=2
+
+INTEGRATIONTESTS = $(shell go list ./... | grep test)
+
 define docker_restart_only_if_exited
 	@if [ "$(docker ps -q  -f "status=exited" | wc -l)" != "" ] ; then \
 			docker restart $(docker ps -q -f "status=exited") ;\
@@ -9,25 +18,38 @@ endef
 testnet-restart-only-exited:
 	$(call docker_restart_only_if_exited) 
 
-# The following command setup config files of validators and nodes and create 
+# The following command setup config files for nodes/validators and create 
 # the corresponding docker-compose.yml file
-# example: make testnet-init nrValidator=4 nrNode=2 mode=mpc signer=3 total=4 theshold=2
 testnet-init:
-	bash spin-up.sh setup_nodes 4 2 mpc 3 4 2
+	bash  spin-up.sh setup_nodes $(VALIDATORS) $(NODES) $(MODE) $(SIGNERS) $(TOTALSHARES) $(THRESHOLD)
 
-# Some of the nodes/validator containers may exited prematurily at the container initialization
-# because they don't find the pubkey.
-# Usually this happened to the nodes/validator that are using an external signing process.
-# if those nodes/validators start before the signing process, they won't find the pubkey and
-# exit. To prevent those node from exit prematurily we simply execute docker_restart_only_if_exited
-# in the testnet-start command.
+
 testnet-start:
 	docker-compose up -d
-	$(call docker_restart_only_if_exited)
-	
-testnet-stop:
+	echo "Sleep 25"
+	@sleep 25
+
+# stop all cointainers
+testnet-stop:	
+	docker-compose stop
+
+# exited/running container will be restarted
+testnet-restart:	
+	docker-compose restart
+
+# stop/remove all cointainers
+testnet-down:
 	docker-compose down
 
 testnet-clean:
 	docker-compose down 
 	bash spin-up.sh clean_setup
+
+testnet-check-mpc-validator:
+	check-validators $(VALIDATORS)
+	check-signers $(SIGNERS)
+
+testnet-checks:
+	go test -mod=readonly $(INTEGRATIONTESTS) -count=1
+
+testnet-integration: testnet-init testnet-start testnet-checks testnet-clean

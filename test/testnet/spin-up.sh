@@ -1,15 +1,18 @@
 #!/bin/sh
 
-BINARY=junod
-BINARY_IMAGE=cosmoscontracts/juno:latest
-MPC_IMAGE=dautt/valink:v2.0.0
-CHAINID=test-chain-id	
-CHAINDIR=./chain/${BINARY::-1}/workspace	
-MPCCHAINDIR=./chain/${BINARY::-1}/mpc
-MPCKEYFOLDER=./chain/${BINARY::-1}/mpc/keys
+BINARY="junod"
+BINARY_IMAGE="cosmoscontracts/juno:latest"
+MPC_IMAGE="dautt/valink:v2.0.1"
+CHAINID="test-chain-id"	
+# directories config
+FIXTUREDIR="../fixture/chain/${BINARY::-1}"
+CHAINDIR="$FIXTUREDIR/workspace"	
+MPCCHAINDIR="$FIXTUREDIR/mpc"
+MPCKEYDIR="$FIXTUREDIR/mpc/keys"
 
-VALIDATOR='validator'
-NODE='node'
+IP_ADDRESS_PREFIX="192.168.10"
+VALIDATOR="validator"
+NODE="node"
 
 KBT="--keyring-backend=test"
 
@@ -21,12 +24,9 @@ MAXCOINS="100000000000"$DENOM
 COINS="90000000000"$DENOM	
 
 clean_setup(){
-    echo "rm -rf $CHAINDIR"
-    echo "rm -rf $MPCCHAINDIR"
-    echo "rm -f docker-compose.yaml"
-    sudo rm -rf $CHAINDIR
+    echo "clean_setup"
+    sudo rm -rf $FIXTUREDIR
     sudo rm -f docker-compose.yml
-    sudo rm -rf $MPCCHAINDIR
 }
 
 get_home() {
@@ -128,7 +128,7 @@ set_persistent_peers(){
     # validator loop
     while ((n < $1)); do
         nodeName="$VALIDATOR$n"
-        ipAddress="192.168.10.$ip_nr"
+        ipAddress="$IP_ADDRESS_PREFIX.$ip_nr"
         if [ "$n" != "$3"  ] || [ "$4" != "$VALIDATOR" ]; then
             home=$(get_home $nodeName)
             peer="$($BINARY --home $home tendermint show-node-id)@${ipAddress}:26656"
@@ -148,7 +148,7 @@ set_persistent_peers(){
     ip_nr=$1
     while ((n < $2)); do
         nodeName="$NODE$n"
-        ipAddress="192.168.10.$ip_nr"
+        ipAddress="$IP_ADDRESS_PREFIX.$ip_nr"
         if [ "$n" != "$3" ] || [ "$4" != "$NODE" ]; then
             home=$(get_home $nodeName)
             peer="$($BINARY --home $home tendermint show-node-id)@${ipAddress}:26656"
@@ -169,14 +169,26 @@ set_persistent_peers(){
    
 }
  
+# $1 = the number of the current node
+# $2 = current node type (VALIDATOR|NODE)
+set_rpc_node(){
+    echo "set_rpc_node $1 $2"
+    currentNodeName="$2$1"
+    currentNodeHome=$(get_home $currentNodeName)
+    # we make the following changes to the config so that we can query the rpc node 
+    # from outisde the running docker container
+    sed -i "s/127.0.0.1:26657/0.0.0.0:26657/" $currentNodeHome/config/config.toml
+}
+
 # $1 = number of validators
 # $2 = number of nodes
-set_persistent_peers_all_nodes() {
-    echo "set_persistent_peers_all_nodes"
+set_config_attr_all_nodes() {
+    echo "set_config_attr_all_nodes"
     node=0
     # validator
     while ((node < $1)); do
         set_persistent_peers $1 $2 $node $VALIDATOR 
+        set_rpc_node $node $VALIDATOR 
         let node=node+1
     done
 
@@ -184,9 +196,11 @@ set_persistent_peers_all_nodes() {
      # validator
     while ((node < $2)); do
         set_persistent_peers $1 $2 $node $NODE 
+        set_rpc_node $node $NODE 
         let node=node+1
     done
 }
+
 
 # $1 = number of node
 # $2 = node type (VALIDATOR|NODE)
@@ -206,7 +220,7 @@ init_node () {
 
     echo "########## generate genesis.json ###############"
      if  [ "$2" = "$VALIDATOR" ]; then
-            copy_all_gentx_and_add_genesis_account_to_node0 $1 
+            copy_all_gentx_and_add_genesis_account_to_node0 $1
             collect_gentxs_from_validator0
             replace_stake_denomination
      fi 
@@ -233,14 +247,19 @@ generate_docker_compose_file(){
         echo "   container_name: $nodeName"
         echo "   image: $BINARY_IMAGE"
         echo "   ports:"
-        echo "   - \"$portStart-$portEnd:26656-26657\""
+        echo "   - \"$portStart:26656\""
+        echo "   - \"$portEnd:26657\""
         echo "   - \"$mpcPort:1235\""
         echo "   volumes:"
         echo "   - $CHAINDIR:/workspace"
         echo "   command: /bin/sh -c 'junod start --home /workspace/test-chain-id/$nodeName'"
+        if [ "$3" = "mpc" ] && [ "$n" = "0" ] ; then
+        echo "   depends_on:"
+        echo "   - mpc1"
+        fi 
         echo "   networks:"
         echo "     localnet:"
-        echo -e "       ipv4_address: 192.168.10.$n\n"
+        echo -e "       ipv4_address: $IP_ADDRESS_PREFIX.$n\n"
     
         let n=n+1
         let portStart=portEnd+1
@@ -251,6 +270,7 @@ generate_docker_compose_file(){
     # node config
     let n=0
     ip_nr=$1
+    let nrMpcNode=$4-1
     while ((n < $2)); do
         nodeName="$NODE$n"
        
@@ -258,14 +278,20 @@ generate_docker_compose_file(){
         echo "   container_name: $nodeName"
         echo "   image: $BINARY_IMAGE"
         echo "   ports:"
-        echo "   - \"$portStart-$portEnd:26656-26657\""
+        echo "   - \"$portStart:26656\""
+        echo "   - \"$portEnd:26657\""
         echo "   - \"$mpcPort:1235\""
         echo "   volumes:"
         echo "   - $CHAINDIR:/workspace"
         echo "   command: /bin/sh -c 'junod start --home /workspace/test-chain-id/$nodeName'"
+        if [ "$3" = "mpc" ] && [ "$n" -lt "$nrMpcNode" ]; then
+        let i=$n+2
+        echo "   depends_on:"
+        echo "   - mpc$i"
+        fi 
         echo "   networks:"
         echo "     localnet:"
-        echo -e "       ipv4_address: 192.168.10.$ip_nr\n"
+        echo -e "       ipv4_address: $IP_ADDRESS_PREFIX.$ip_nr\n"
     
         let n=n+1
         let ip_nr=ip_nr+1
@@ -289,7 +315,7 @@ generate_docker_compose_file(){
             echo "   command: /bin/sh -c 'valink cosigner start /mpc/$mpcName/config.toml'"
             echo "   networks:"
             echo "     localnet:"
-            echo -e "       ipv4_address: 192.168.10.$ip_nr\n"
+            echo -e "       ipv4_address: $IP_ADDRESS_PREFIX.$ip_nr\n"
         
             let n=n+1
             let mpcPort=mpcPort+1
@@ -306,7 +332,7 @@ generate_docker_compose_file(){
     echo "      driver: default"
     echo "      config:"
     echo "      -"
-    echo "        subnet: 192.168.10.0/16"
+    echo "        subnet: $IP_ADDRESS_PREFIX.0/16"
 
 }
 
@@ -320,6 +346,8 @@ generate_docker_compose_file(){
 generate_mpc_config_file(){
     mpcName="mpc$6" 
     echo -e "mode = \"mpc\"\n"
+
+    echo -e "moniker = \"$mpcName\"\n"
 
     echo "# Each validator instance has its own private share."
     echo "# Avoid putting more than one share per instance."
@@ -346,7 +374,7 @@ generate_mpc_config_file(){
     k=1
     let ip_nr=$1+$2
     while ((k <= $3)); do
-        ipAddress="192.168.10.$ip_nr"
+        ipAddress="$IP_ADDRESS_PREFIX.$ip_nr"
         if [ "$k" != "$6" ] ; then
             echo "[[cosigner]]"
             echo "# The ID of this peer, these must match the key IDs."
@@ -364,11 +392,11 @@ generate_mpc_config_file(){
     # mpc3 is assigned to node1
     # mpcn is assigned to node(n-2)
     let ip_nr=$1-2+$6
-    ipAddress="192.168.10.$ip_nr"
+    ipAddress="$IP_ADDRESS_PREFIX.$ip_nr"
     if [ "$6" = "1" ] ; then
                 # ip address of validator0, which is by convention the validator used to build the
                 # threshold validator
-                ipAddress="192.168.10.0"
+                ipAddress="$IP_ADDRESS_PREFIX.0"
     fi
     echo "# Configure any number of p2p network nodes."
     echo "# We recommend at least 2 nodes per cosigner for redundancy."
@@ -421,10 +449,10 @@ generate_all_mpc_config_file() {
 
 
 create_mpc_share_from_validator0(){
-    if [ ! -f $MPCKEYFOLDER ]; then 
-            mkdir -p $MPCKEYFOLDER
+    if [ ! -f $MPCKEYDIR ]; then 
+            mkdir -p $MPCKEYDIR
     fi
-    cd $MPCKEYFOLDER
+    cd $MPCKEYDIR
     cp ../../workspace/test-chain-id/validator0/config/priv_validator_key.json ./
     ../../../../../../build/valink create-shares  ../../workspace/test-chain-id/validator0/config/priv_validator_key.json 2 4 
     
@@ -449,7 +477,75 @@ echo "set_all_mpc_priv_validator_laddr"
     done
 }
 
-   
+
+
+# $1 = number validators
+# $2 = number of nodes
+# $3 = number of signer
+# $4 = total shares
+# $5 = threshold
+mpc_sanity_check(){
+            # number node => number signer -1 
+            if (( $2 < $3-1 )) ; then 
+                echo "Error: number of nodes ($2) < number of signers minus 1 ($3 - 2)" 1>&2
+                exit 1
+            fi 
+            # number validator =>2
+             if (( $1 < 2 )); then 
+                echo "Error: number of validator ($1) < 2" 1>&2
+                exit 1
+            fi 
+             # number signer => 2
+             if (( $3 < 2 )); then  
+                echo "Error: number of signer ($3) < 2" 1>&2
+                exit 1
+            fi 
+            # total shares => threshold
+             if (( $5 > $4 )); then  
+                echo "Error: threshold ($5) > total shares ($4)" 1>&2
+                exit 1
+            fi 
+            # total shares => 1
+             if (( $4 < 1 )); then  
+                echo "Error: total shares < 1" 1>&2
+                exit 1
+            fi 
+            # threshold => 1
+             if (( $5 < 1 )); then  
+                echo "Error: threshold < 1" 1>&2
+                exit 1
+            fi 
+}
+
+# $1 = number validators
+# $2 = number node
+# $3 = mpc/normal
+# $4 = number signer
+# $5 = mpc total shares
+# $6 = mpc threshold   
+setup_node_sanity_check(){
+    echo "setup_node_sanity_check"
+    # number validators > 1
+    if (( $1 < 1 )) ; then 
+        echo "Error: number validators ($1) < 1" 1>&2
+        exit 1
+    fi 
+    # number node => 0
+        if (( $2 < 0 )); then 
+        echo "Error: number of nodes ($2) < 0" 1>&2
+        exit 1
+    fi 
+    # mode = mpc/normal
+    if [ $3 != "mpc" ] || [$3 != "normal"]; then  
+        echo "Error: incorrect mode value!=> valid values=(mpc, normal)" 1>&2
+    exit 1
+    fi 
+
+    if [ "$3" = "mpc" ] ; then
+        mpc_sanity_check $1 $2 $4 $5 $6
+    fi
+
+}
 
 # $1 = number validators
 # $2 = number node
@@ -458,10 +554,11 @@ echo "set_all_mpc_priv_validator_laddr"
 # $5 = mpc total shares
 # $6 = mpc threshold
 setup_nodes(){
+    setup_node_sanity_check $1 $2 $3 $4 $5 $6
     clean_setup
     init_node $1 $VALIDATOR
     init_node $2 $NODE
-    set_persistent_peers_all_nodes $1 $2
+    set_config_attr_all_nodes $1 $2
     echo "generate_docker_compose_file $1 $2 $3 $4"
     generate_docker_compose_file $1 $2 $3 $4 > docker-compose.yml
     generate_all_mpc_config_file $1 $2 $4 $5 $6
@@ -489,12 +586,12 @@ do
         "init validator")
             read -p "number of validators: " valNr
             init_node $valNr $VALIDATOR
-            set_persistent_peers_all_nodes $valNr 0
+            set_config_attr_all_nodes $valNr 0
             ;;
         "init nodes")
             read -p "number of nodes: " nodeNr
             init_node $nodeNr $NODE
-            set_persistent_peers_all_nodes 0 $nodeNr
+            set_config_attr_all_nodes 0 $nodeNr
             ;;
         "clean setup")
            clean_setup
