@@ -4,3 +4,7 @@ v1.0.0:
 
 v1.1.0:
     - Refactor the code to use valink as the name of the binary app
+
+v1.2.0:
+    - Add integration tests in chan_test.go
+    

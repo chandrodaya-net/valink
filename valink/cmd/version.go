@@ -10,7 +10,7 @@ import (
 
 var (
 	// application's version string
-	Version = "v1.1.0"
+	Version = "v1.2.0"
 	// commit
 	Commit = ""
 	// sdk version
