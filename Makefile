@@ -38,9 +38,10 @@ tools:
 clean:
 	rm -rf build
 
-# build-valink-docker:
-# 	docker build -t dauTT/valink:$(VERSION) -f ./Dockerfile .
-
+build-valink-docker:
+	docker rmi dautt/valink:vgRPC2.0.1
+	docker build . -t dautt/valink:vgRPC2.0.1
+	
 # push-junod-docker:
 # 	docker push dauTT/junod:$(SDKVERSION)
 

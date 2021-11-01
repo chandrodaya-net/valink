@@ -1,11 +1,12 @@
 #!/usr/bin/make -f
 
 VALIDATORS=4
-NODES=3
-MODE=mpc
+NODES=2
+MODE=single # mpc/single
 SIGNERS=3
-TOTALSHARES=4
-THRESHOLD=2
+# Variables with prefix MPC are relevant only when MODE=mpc
+MPC_TOTALSHARES=4
+MPC_THRESHOLD=2
 
 INTEGRATIONTESTS = $(shell go list ./... | grep test)
 
@@ -21,7 +22,7 @@ testnet-restart-only-exited:
 # The following command setup config files for nodes/validators and create 
 # the corresponding docker-compose.yml file
 testnet-init:
-	bash  spin-up.sh setup_nodes $(VALIDATORS) $(NODES) $(MODE) $(SIGNERS) $(TOTALSHARES) $(THRESHOLD)
+	bash  spin-up.sh setup_nodes $(VALIDATORS) $(NODES) $(MODE) $(SIGNERS) $(MPC_TOTALSHARES) $(MPC_THRESHOLD)
 
 
 testnet-start:

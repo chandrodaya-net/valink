@@ -230,7 +230,7 @@ init_node () {
 
 # $1 = number validators
 # $2 = number of nodes
-# $3 = mpc/normal
+# $3 = mpc/single
 # $4 = number of signer
 generate_docker_compose_file(){
     echo -e "version: '3'\n"
@@ -257,6 +257,10 @@ generate_docker_compose_file(){
         echo "   depends_on:"
         echo "   - mpc1"
         fi 
+        if [ "$3" = "single" ] && [ "$n" = "0" ] ; then
+        echo "   depends_on:"
+        echo "   - single"
+        fi 
         echo "   networks:"
         echo "     localnet:"
         echo -e "       ipv4_address: $IP_ADDRESS_PREFIX.$n\n"
@@ -270,7 +274,7 @@ generate_docker_compose_file(){
     # node config
     let n=0
     ip_nr=$1
-    let nrMpcNode=$4-1
+    let nrSigner=$4-1
     while ((n < $2)); do
         nodeName="$NODE$n"
        
@@ -284,10 +288,14 @@ generate_docker_compose_file(){
         echo "   volumes:"
         echo "   - $CHAINDIR:/workspace"
         echo "   command: /bin/sh -c 'junod start --home /workspace/test-chain-id/$nodeName'"
-        if [ "$3" = "mpc" ] && [ "$n" -lt "$nrMpcNode" ]; then
+        if [ "$3" = "mpc" ] && [ "$n" -lt "$nrSigner" ]; then
         let i=$n+2
         echo "   depends_on:"
         echo "   - mpc$i"
+        fi 
+        if [ "$3" = "single" ] && [ "$n" -lt "$nrSigner" ]; then
+        echo "   depends_on:"
+        echo "   - single"
         fi 
         echo "   networks:"
         echo "     localnet:"
@@ -324,6 +332,23 @@ generate_docker_compose_file(){
     
     fi 
 
+    if [ "$3" = "single" ]; then 
+            # single signer section   
+          
+            mpcName="single"
+            echo " $mpcName:"
+            echo "   container_name: $mpcName"
+            echo "   image: $MPC_IMAGE"
+            echo "   ports:"
+            echo "   - \"$mpcPort:1234\""
+            echo "   volumes:"
+            echo "   - $FIXTUREDIR/single:/single"
+            echo "   command: /bin/sh -c 'valink signer start /single/config.toml'"
+            echo "   networks:"
+            echo "     localnet:"
+            echo -e "       ipv4_address: $IP_ADDRESS_PREFIX.$ip_nr\n"
+                
+    fi 
 
     echo "networks:"
     echo "  localnet:"
@@ -335,6 +360,12 @@ generate_docker_compose_file(){
     echo "        subnet: $IP_ADDRESS_PREFIX.0/16"
 
 }
+
+
+ #if (( $1 < 1 )) ; then 
+ #       echo "Error: number validators ($1) < 1" 1>&2
+ #       exit 1
+ #   fi 
 
 
 # $1 = number validator
@@ -411,15 +442,60 @@ generate_mpc_config_file(){
 }
 
 
-# # $1 = number validator
-# # $2 = number node
-# # $3 = number signer
-# # $4 = mpc total shares
-# # $5 = mpc threshold
-# # $6 = number of the current signer
-# generate_mpc_config_file(){
- 
-# }
+# $1 = number validator
+# $2 = number node
+# $3 = number of signer
+generate_single_config_file(){
+    signerNode=$3-1
+     if (( $1 < $signerNode )); then 
+            echo "Error: number of node ($2) < $signerNode " 1>&2
+            exit 1
+    fi 
+
+    single="single" 
+    echo -e "mode = \"mpc\"\n"
+
+    echo -e "moniker = \"$single\"\n"
+
+    echo "# Each validator instance has its own private share."
+    echo "# Avoid putting more than one share per instance."
+    echo -e "key_file = \"$single/priv_validator_key.json\"\n"
+
+    echo "# The state directory stores watermarks for double signing protection."
+    echo "# Each validator instance maintains a watermark."
+    echo -e "state_dir = \"/$single\"\n"
+
+    echo "# The network chain id for your p2p nodes"
+    echo -e "chain_id = \"${CHAINID}\"\n"
+
+    # mpc1 is assigned to validator0
+    #let ip_nr=0
+    #ipAddress="$IP_ADDRESS_PREFIX.$ip_nr"
+
+    #echo "# Configure any number of p2p network nodes."
+    #echo "# We recommend at least 2 nodes per cosigner for redundancy."
+    #echo "[[node]]"
+    #echo "address = \"tcp://${ipAddress}:1235\""
+
+    k=1
+    let ip_nr=$1-1
+    while ((k <= $3)); do
+        if [ "$k" = "1" ] ; then
+            ipAddress="$IP_ADDRESS_PREFIX.0"
+        else 
+            ipAddress="$IP_ADDRESS_PREFIX.$ip_nr"
+        fi 
+        echo "[[node]]"
+        echo -e "address = \"tcp://${ipAddress}:1235\"\n"
+        let k=k+1
+        let ip_nr=ip_nr+1
+    done
+
+    #[[node]]
+    #address = "tcp://137.184.11.214:1235"
+     
+}
+
 
 generate_mpc_sign_state(){
     echo   "{
@@ -451,6 +527,7 @@ generate_all_mpc_config_file() {
 
 
 create_mpc_share_from_validator0(){
+    echo "create_mpc_share_from_validator0"
     if [ ! -f $MPCKEYDIR ]; then 
             mkdir -p $MPCKEYDIR
     fi
@@ -462,10 +539,22 @@ create_mpc_share_from_validator0(){
     cd ../../../../
 }
 
+
+create_single_priv_key_from_validator0(){
+    echo "create_single_priv_key_from_validator0"
+    if [ ! -f $FIXTUREDIR/single ]; then 
+            mkdir -p $FIXTUREDIR/single
+    fi
+  
+  
+    cp  $FIXTUREDIR/workspace/test-chain-id/validator0/config/priv_validator_key.json  $FIXTUREDIR/single
+  
+}
+
 # $1 number of node
 # $2 number mpc signer
 set_all_mpc_priv_validator_laddr(){
-echo "set_all_mpc_priv_validator_laddr"
+    echo "set_all_mpc_priv_validator_laddr"
     n=1
     while ((n <= $2)); do
         let mpcnodeNr=n-2
@@ -479,6 +568,22 @@ echo "set_all_mpc_priv_validator_laddr"
     done
 }
 
+
+# $1 number of signer
+set_single_priv_validator_laddr(){
+    echo "set_single_priv_validator_laddr"
+    n=1
+    while ((n <= $1)); do
+        let nodeNr=n-2
+        nodeName="${NODE}$nodeNr"
+        if [ "$n" = "1" ] ; then
+                nodeName="${VALIDATOR}0"
+        fi
+        nodeHome=$(get_home $nodeName)        
+        sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \"tcp:\/\/0.0.0.0:1235\"/" $nodeHome/config/config.toml
+        let n=n+1
+    done
+}
 
 
 # $1 = number validators
@@ -521,7 +626,7 @@ mpc_sanity_check(){
 
 # $1 = number validators
 # $2 = number node
-# $3 = mpc/normal
+# $3 = mpc/single
 # $4 = number signer
 # $5 = mpc total shares
 # $6 = mpc threshold   
@@ -537,10 +642,10 @@ setup_node_sanity_check(){
         echo "Error: number of nodes ($2) < 0" 1>&2
         exit 1
     fi 
-    # mode = mpc/normal
-    if [ $3 != "mpc" ] || [$3 != "normal"]; then  
-        echo "Error: incorrect mode value!=> valid values=(mpc, normal)" 1>&2
-    exit 1
+    # mode = mpc/single
+    if [ $3 != "mpc" ] && [ $3 != "single" ] ; then  
+        echo "Error: incorrect mode value!=> valid values=(mpc, single)" 1>&2
+        exit 1
     fi 
 
     if [ "$3" = "mpc" ] ; then
@@ -551,7 +656,7 @@ setup_node_sanity_check(){
 
 # $1 = number validators
 # $2 = number node
-# $3 = mpc/normal
+# $3 = mpc/single
 # $4 = number signer
 # $5 = mpc total shares
 # $6 = mpc threshold
@@ -563,22 +668,32 @@ setup_nodes(){
     set_config_attr_all_nodes $1 $2
     echo "generate_docker_compose_file $1 $2 $3 $4"
     generate_docker_compose_file $1 $2 $3 $4 > docker-compose.yml
-    generate_all_mpc_config_file $1 $2 $4 $5 $6
-    set_all_mpc_priv_validator_laddr $2 $4
-    create_mpc_share_from_validator0
+    if [ "$3" = "mpc" ] ; then
+        generate_all_mpc_config_file $1 $2 $4 $5 $6
+        set_all_mpc_priv_validator_laddr $2 $4
+        create_mpc_share_from_validator0
+    else 
+        if [ ! -f $FIXTUREDIR/single ]; then 
+            mkdir -p $FIXTUREDIR/single
+        fi
+        generate_single_config_file $1 $2 $4 &> $FIXTUREDIR/single/config.toml
+        set_single_priv_validator_laddr $4
+        create_single_priv_key_from_validator0
+    fi
+
 }
 
 
 repl() {
 PS3='Please enter your choice: '
-options=("setup nodes"  "init validator" "init nodes" "clean setup" "docker compose file"  "mpc config files" "create mpc shares" "Quit")
+options=("setup nodes"  "init validator" "init nodes" "clean setup" "docker compose file"  "mpc config files" "create mpc shares" "single config file" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in
         "setup nodes")
             read -p "number of validators: " valNr
             read -p "number of nodes: " nodeNr
-            read -p "mode (mpc/normal): " mode
+            read -p "mode (mpc/single): " mode
             read -p "mpc number signer: " mpcsignerNr
             read -p "mpc total shares: " mpctotal
             read -p "mpc threshold: " mpcthreshold
@@ -601,7 +716,7 @@ do
         "docker compose file")
             read -p "number of validators: " valNr
             read -p "number of nodes: " nodeNr
-            read -p "mode (mpc/normal): " mode
+            read -p "mode (mpc/single): " mode
             read -p "mpc number signer: " mpcsignerNr
 
             generate_docker_compose_file $valNr $nodeNr $mode $mpcsignerNr &> docker-compose.yml
@@ -623,6 +738,12 @@ do
         "create mpc shares")
             create_mpc_share_from_validator0
             ;;
+        "single config file")
+            read -p "number validator: " valNr
+            read -p "number of nodes: " nodeNr
+            generate_single_config_file $valNr $nodeNr
+            ;;
+
         "Quit")
             break
             ;;

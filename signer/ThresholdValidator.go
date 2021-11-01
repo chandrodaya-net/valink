@@ -160,7 +160,7 @@ func (pv *ThresholdValidator) signBlock(chainID string, block *block) ([]byte, t
 			// cosigner.Sign makes a blocking RPC request (with no timeout)
 			// to prevent it from hanging our process indefinitely, we use a timeout context
 			// and another goroutine
-			signCtx, signCtxCancel := context.WithTimeout(context.Background(), 2*time.Second)
+			signCtx, signCtxCancel := context.WithTimeout(context.Background(), 3*time.Second)
 
 			go func() {
 				hasResp, err := pv.cosigner.HasEphemeralSecretPart(CosignerHasEphemeralSecretPartRequest{

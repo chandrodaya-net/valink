@@ -1,3 +1,4 @@
+# 'valink signer start /home/dau/workspace/dauTT/tendermint-mpc-validator/test/fixture/config_template/single/config.toml'
 mode = "single"
 
 # Each validator instance has its own private share.
