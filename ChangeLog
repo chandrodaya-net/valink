@@ -1,3 +1,6 @@
 v1.0.0:
     - Add testing framework
     - Test the framework with nrValidator=3 nrNode=2 mode=mpc nrSigner=3 totalShares=4 theshold=2
+
+v1.1.0:
+    - Refactor the code to use valink as the name of the binary app

@@ -1,31 +1,45 @@
-GOLINT:=$(shell go list -f {{.Target}} golang.org/x/lint/golint)
+VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
+# SDKVERSION := $(shell go list -m -u -f '{{.Version}}' github.com/cosmos/cosmos-sdk)
+TMVERSION := $(shell go list -m -u -f '{{.Version}}' github.com/tendermint/tendermint)
+COMMIT  := $(shell git log -1 --format='%H')
 
-all: build
+all: install
 
-build: build/signer build/key2shares
+LD_FLAGS = -X github.com/dauTT/tendermint-mpc-validator/cmd.Version=$(VERSION) \
+	-X github.com/dauTT/tendermint-mpc-validator/cmd.Commit=$(COMMIT) \
+	-X github.com/dauTT/tendermint-mpc-validator/cmd.SDKVersion=$(SDKVERSION) \
+	-X github.com/dauTT/tendermint-mpc-validator/cmd.TMVersion=$(TMVERSION)
 
-build/signer: cmd/signer/main.go $(wildcard signer/**/*.go)
-	CGO_ENABLED=0 go build -mod=readonly -o ./build/signer ${gobuild_flags} ./cmd/signer
+BUILD_FLAGS := -ldflags '$(LD_FLAGS)'
 
-build/key2shares: cmd/key2shares/main.go $(wildcard signer/**/*.go)
-	CGO_ENABLED=0 go build -mod=readonly -o ./build/key2shares ${gobuild_flags} ./cmd/key2shares
+build:
+	go build -mod readonly $(BUILD_FLAGS) -o build/valink ./valink
 
-lint: tools
-	@$(GOLINT) -set_exit_status ./...
+install:
+	go install -mod readonly $(BUILD_FLAGS) ./valink
+
+build-linux:
+	GOOS=linux GOARCH=amd64 go build --mod readonly $(BUILD_FLAGS) -o ./build/valink ./valink
 
 test:
-	@go test -short ./...
+	go test -mod readonly  ./...
 
 race:
-	@go test -race -short ./...
+	go test -race -short ./...
 
 msan:
-	@go test -msan -short ./...
+	go test -msan -short ./...
 
 tools:
-	@go install golang.org/x/lint/golint
+	go install golang.org/x/lint/golint
 
 clean:
 	rm -rf build
+
+# build-valink-docker:
+# 	docker build -t dauTT/valink:$(VERSION) -f ./Dockerfile .
+
+# push-junod-docker:
+# 	docker push dauTT/junod:$(SDKVERSION)
 
 .PHONY: all lint test race msan tools clean build

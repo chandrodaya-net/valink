@@ -10,7 +10,7 @@ import (
 
 func TestLoadOrCreateSignState(test *testing.T) {
 	state := SignState{}
-	state.filePath = "../../test/sign_state.json"
+	state.filePath = "../test/sign_state.json"
 	state.Save()
 
 	ssFile, err := LoadSignState(state.filePath)
