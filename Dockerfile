@@ -1,5 +1,5 @@
-# docker build . -t tendermint-mpc/validator:latest
-# docker run --rm -it tendermint-mpc/validator:latest /bin/sh
+# docker build . -t dautt/valink:v2.0.0
+# docker run --rm -it dautt/valink:v2.0.0 /bin/sh
 
 FROM golang:1.16-alpine3.12 AS builder
 
@@ -19,9 +19,7 @@ RUN make build
 
 FROM alpine:3.12
 
-COPY --from=builder /code/build/key2shares /usr/bin/key2shares
-COPY --from=builder /code/build/signer /usr/bin/signer
-
+COPY --from=builder /code/build/valink /usr/bin/valink
 
 CMD ["echo", "image build successfully"]
 

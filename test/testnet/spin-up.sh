@@ -2,7 +2,7 @@
 
 BINARY=junod
 BINARY_IMAGE=cosmoscontracts/juno:latest
-MPC_IMAGE=tendermint-mpc/validator:latest
+MPC_IMAGE=dautt/valink:v2.0.0
 CHAINID=test-chain-id	
 CHAINDIR=./chain/${BINARY::-1}/workspace	
 MPCCHAINDIR=./chain/${BINARY::-1}/mpc
@@ -286,7 +286,7 @@ generate_docker_compose_file(){
             echo "   - \"$mpcPort:1234\""
             echo "   volumes:"
             echo "   - $MPCCHAINDIR:/mpc"
-            echo "   command: /bin/sh -c 'signer --config /mpc/$mpcName/config.toml'"
+            echo "   command: /bin/sh -c 'valink cosigner start /mpc/$mpcName/config.toml'"
             echo "   networks:"
             echo "     localnet:"
             echo -e "       ipv4_address: 192.168.10.$ip_nr\n"
@@ -426,7 +426,7 @@ create_mpc_share_from_validator0(){
     fi
     cd $MPCKEYFOLDER
     cp ../../workspace/test-chain-id/validator0/config/priv_validator_key.json ./
-    ../../../../../../build/key2shares --total 4 --threshold 2  ../../workspace/test-chain-id/validator0/config/priv_validator_key.json 
+    ../../../../../../build/valink create-shares  ../../workspace/test-chain-id/validator0/config/priv_validator_key.json 2 4 
     
     # go back to folder where spin-up.sh is located
     cd ../../../../
