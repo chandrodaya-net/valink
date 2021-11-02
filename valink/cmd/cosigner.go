@@ -95,10 +95,16 @@ func StartCosignerCmd() *cobra.Command {
 				panic(err)
 			}
 
+			sss, _ := cmd.Flags().GetBool("sss")
 			// state for our cosigner share
 			// Not automatically initialized on disk to avoid double sign risk
 			shareStateFile := path.Join(config.PrivValStateDir, fmt.Sprintf("%s_share_sign_state.json", chainID))
-			shareSignState, err := signer.LoadSignState(shareStateFile)
+			var shareSignState signer.SignState
+			if sss {
+				shareSignState, err = signer.LoadOrCreateSignState(shareStateFile)
+			} else {
+				shareSignState, err = signer.LoadSignState(shareStateFile)
+			}
 			if err != nil {
 				panic(err)
 			}
@@ -201,6 +207,7 @@ func StartCosignerCmd() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("profile", false, "--profile=false or true")
+	cmd.Flags().Bool("sss", false, "valink will create a default share signing state json if the flag is set to be true. By default the flag is set to be false")
 
 	return cmd
 }
