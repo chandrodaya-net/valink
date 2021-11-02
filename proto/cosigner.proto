@@ -4,10 +4,6 @@ syntax = "proto3";
 
 option go_package = "/signer";
 
-// protoc --go_out=plugins=grpc:../  *.proto
-
-// /home/dau/workspace/dauTT/tendermint-mpc-validator/signer/Cosigner.go
-
 message CosignerSignRequest {
 	bytes sign_bytes = 1; 
 }
