@@ -15,7 +15,7 @@ import (
 type CosignerRpcServerConfig struct {
 	Logger        log.Logger
 	ListenAddress string
-	Cosigner      Cosigner
+	LocalCosigner Cosigner
 	Peers         []RemoteCosigner
 }
 
@@ -26,14 +26,14 @@ type CosignerRpcServer struct {
 	logger        log.Logger
 	listenAddress string
 	listener      net.Listener
-	cosigner      Cosigner
+	localCosigner Cosigner
 	peers         []RemoteCosigner
 }
 
 // NewCosignerRpcServer instantiates a local cosigner with the specified key and sign state
 func NewCosignerRpcServer(config *CosignerRpcServerConfig) *CosignerRpcServer {
 	cosignerRpcServer := &CosignerRpcServer{
-		cosigner:      config.Cosigner,
+		localCosigner: config.LocalCosigner,
 		listenAddress: config.ListenAddress,
 		peers:         config.Peers,
 		logger:        config.Logger,
@@ -104,14 +104,14 @@ func (rpcServer *CosignerRpcServer) Sign(ctx context.Context, req *CosignerSignR
 
 			go func() {
 				partRequest := CosignerGetEphemeralSecretPartRequest{
-					ID:     int32(rpcServer.cosigner.GetID()),
+					ID:     int32(rpcServer.localCosigner.GetID()),
 					Height: height,
 					Round:  round,
 					Step:   int32(step),
 				}
 
 				// if we already have an ephemeral secret part for this HRS, we don't need to re-query for it
-				hasResp, err := rpcServer.cosigner.HasEphemeralSecretPart(CosignerHasEphemeralSecretPartRequest{
+				hasResp, err := rpcServer.localCosigner.HasEphemeralSecretPart(CosignerHasEphemeralSecretPartRequest{
 					ID:     peer.GetID(),
 					Height: height,
 					Round:  round,
@@ -144,7 +144,7 @@ func (rpcServer *CosignerRpcServer) Sign(ctx context.Context, req *CosignerSignR
 				defer partReqCtxCancel()
 
 				// set the share part from the response
-				err = rpcServer.cosigner.SetEphemeralSecretPart(CosignerSetEphemeralSecretPartRequest{
+				err = rpcServer.localCosigner.SetEphemeralSecretPart(CosignerSetEphemeralSecretPartRequest{
 					SourceID:                       int(partResponse.SourceID),
 					SourceEphemeralSecretPublicKey: partResponse.SourceEphemeralSecretPublicKey,
 					EncryptedSharePart:             partResponse.EncryptedSharePart,
@@ -172,7 +172,7 @@ func (rpcServer *CosignerRpcServer) Sign(ctx context.Context, req *CosignerSignR
 	wg.Wait()
 
 	// after getting any share parts we could, we sign
-	resp, err := rpcServer.cosigner.Sign(&CosignerSignRequest{
+	resp, err := rpcServer.localCosigner.Sign(&CosignerSignRequest{
 		SignBytes: req.SignBytes,
 	})
 	if err != nil {
@@ -187,7 +187,7 @@ func (rpcServer *CosignerRpcServer) Sign(ctx context.Context, req *CosignerSignR
 func (rpcServer *CosignerRpcServer) GetEphemeralSecretPart(ctx context.Context, req *CosignerGetEphemeralSecretPartRequest) (*CosignerGetEphemeralSecretPartResponse, error) {
 	response := &CosignerGetEphemeralSecretPartResponse{}
 
-	partResp, err := rpcServer.cosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
+	partResp, err := rpcServer.localCosigner.GetEphemeralSecretPart(&CosignerGetEphemeralSecretPartRequest{
 		ID:     req.ID,
 		Height: req.Height,
 		Round:  req.Round,

@@ -157,7 +157,7 @@ func StartCosignerCmd() *cobra.Command {
 			rpcServerConfig := signer.CosignerRpcServerConfig{
 				Logger:        logger,
 				ListenAddress: config.ListenAddress,
-				Cosigner:      localCosigner,
+				LocalCosigner: localCosigner,
 				Peers:         remoteCosigners,
 			}
 

@@ -49,7 +49,7 @@ func TestCosignerRpcServerSign(test *testing.T) {
 	config := CosignerRpcServerConfig{
 		Logger:        logger,
 		ListenAddress: "0.0.0.0:0",
-		Cosigner:      dummyCosigner,
+		LocalCosigner: dummyCosigner,
 	}
 
 	rpcServer := NewCosignerRpcServer(&config)
@@ -85,7 +85,7 @@ func TestCosignerRpcServerGetEphemeralSecretPart(test *testing.T) {
 	config := CosignerRpcServerConfig{
 		Logger:        logger,
 		ListenAddress: "0.0.0.0:0",
-		Cosigner:      dummyCosigner,
+		LocalCosigner: dummyCosigner,
 	}
 
 	rpcServer := NewCosignerRpcServer(&config)
